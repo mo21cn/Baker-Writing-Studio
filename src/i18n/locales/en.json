@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "close": "Close",
     "cancel": "Cancel",
@@ -69,12 +69,6 @@
     "themeApplied": "Theme applied: {{name}}",
     "savedThemeDeleted": "Saved theme deleted"
   },
-  "progress": {
-    "threadStarted": "Connected to Codex, preparing…",
-    "turnStarted": "Model started generating…",
-    "turnCompleted": "Turn completed.",
-    "turnFailed": "Turn failed."
-  },
   "export": {
     "success": "Long image exported and download started.",
     "failed": "Failed to export long image.",
@@ -82,133 +76,8 @@
     "copyPermissionFailed": "Copy failed. Check browser clipboard permissions."
   },
   "preview": {
-    "aiAssistant": "AI Assistant",
-    "aiAssistantDesktopOnly": "AI Assistant (desktop only)",
     "expandTheme": "Expand theme",
     "collapseTheme": "Collapse theme"
-  },
-  "settings": {
-    "title": "Settings",
-    "webOnlyHint": "Codex login and AI features are desktop-only. Web mode still supports writing, preview, and copy.",
-    "loginHint": "Authorize through the local Codex CLI. Click “Sign in to Codex” to complete OAuth in your browser.",
-    "loggedIn": "Signed in",
-    "loggedOut": "Not signed in",
-    "loggedInCodex": "Signed in to Codex",
-    "loginCodex": "Sign in to Codex",
-    "logoutCodex": "Sign out",
-    "codexPath": "Codex path",
-    "codexPathHint": "Leave empty to auto-detect the local Codex CLI installation.",
-    "codexPathPlaceholder": "Auto-detect if empty",
-    "autoDetect": "Auto-detect",
-    "modelConfig": "Model configuration",
-    "modelConfigHint": "Choose a model per AI capability. Leave empty to use Codex defaults.",
-    "loginLog": "Login log",
-    "openAuthLink": "Open authorization link in browser",
-    "usageTitle": "Codex usage",
-    "usageUpdating": "Updating…",
-    "sessionLabel": "Session (5h)",
-    "weeklyLabel": "Weekly (7d)",
-    "noUsageData": "No data",
-    "remaining": "{{percent}}% remaining",
-    "used": "{{percent}}% used",
-    "windowMinutes": "{{minutes}} min window",
-    "creditsBalance": "Credits balance",
-    "creditsUnlimited": "Unlimited"
-  },
-  "ai": {
-    "title": "AI Assistant",
-    "subtitle": "Understand and generate content with local Codex",
-    "desktopOnly": "AI is available in the Tauri desktop app only.",
-    "notLoggedIn": "Codex is not signed in or the session expired. Open Settings to authorize.",
-    "openSettings": "Open settings",
-    "understand": "Understand",
-    "generate": "Generate",
-    "cowork": "Cowork pipeline",
-    "customStyleLabel": "Custom style (for the custom style action)",
-    "customStylePlaceholder": "Example: product launch speech, fast-paced and inspiring",
-    "coworkHint": "Run AI steps in order. Each step builds on the previous result. Reorder, edit, add, or remove steps.",
-    "runAll": "Run all",
-    "runningAll": "Running…",
-    "resetDefault": "Reset to default",
-    "stepAction": "Step action",
-    "moveUp": "Move up",
-    "moveDown": "Move down",
-    "viewResult": "View result",
-    "execute": "Run",
-    "executing": "Running",
-    "deleteStep": "Delete step",
-    "addStep": "+ Add step",
-    "progressLog": "Run log",
-    "executingBadge": "Running",
-    "resultTitle": "Generated result",
-    "resultFailed": "Execution failed",
-    "clearHistory": "Clear history",
-    "resultEmptyHint": "Results appear here after you run an AI action—no scrolling needed.",
-    "historyResults": "Result history",
-    "failedBadge": "Failed",
-    "append": "Append to end",
-    "replace": "Replace all",
-    "saveAsNew": "Save as new document",
-    "newDocTitle": "AI generated",
-    "status": {
-      "pending": "Pending",
-      "running": "Running",
-      "done": "Done",
-      "error": "Failed",
-      "skipped": "Skipped"
-    },
-    "sections": {
-      "academic": "Academic structure",
-      "mermaid": "Mermaid diagrams",
-      "roleplay": "Style rewrite"
-    },
-    "actions": {
-      "academic:structure": { "label": "Structure content", "description": "Organize long-form content into publish-ready Markdown with headings, paragraphs, and lists." },
-      "academic:summarize": { "label": "Summarize", "description": "Generate an executive summary plus key bullet points while preserving core information." },
-      "academic:toc": { "label": "Generate TOC", "description": "Build an H1–H6 table of contents and adjust heading levels as needed." },
-      "mermaid:flowchart": { "label": "Flowchart", "description": "Convert the core flow into a Mermaid flowchart code block." },
-      "mermaid:sequence": { "label": "Sequence diagram", "description": "Convert interactions/steps into a Mermaid sequenceDiagram code block." },
-      "mermaid:mindmap": { "label": "Mind map", "description": "Convert the knowledge structure into a Mermaid mindmap code block." },
-      "roleplay:academic": { "label": "Academic tone", "description": "Rewrite the full text in an academic style." },
-      "roleplay:wechat": { "label": "WeChat · casual tone", "description": "Rewrite for WeChat with a casual, short-paragraph reading rhythm." },
-      "roleplay:xiaohongshu": { "label": "Xiaohongshu style", "description": "Rewrite the full text in a Xiaohongshu-friendly style." },
-      "roleplay:tech-evangelist": { "label": "Tech evangelism", "description": "Rewrite the full text for developer-facing tech evangelism." },
-      "roleplay:custom": { "label": "Custom style", "description": "Rewrite the full text using your custom style instructions." }
-    },
-    "store": {
-      "webNoLogin": "Codex login is not available in the web app. Use the desktop app.",
-      "cannotReadLogin": "Unable to read login status.",
-      "cannotReadUsage": "Unable to read Codex usage.",
-      "desktopDetectOnly": "Codex auto-detect is desktop-only.",
-      "detectedCodex": "Detected Codex: {{path}}",
-      "detectFailed": "Failed to detect Codex.",
-      "desktopLoginOnly": "Codex login is desktop-only.",
-      "startingLogin": "Starting Codex login…",
-      "loginFailed": "Codex login failed.",
-      "desktopLogoutOnly": "Sign out is desktop-only.",
-      "logoutFailed": "Sign out failed.",
-      "notLoggedInRun": "Codex is not signed in or the session expired. Sign in again in Settings.",
-      "aiFailed": "AI processing failed",
-      "startingCodex": "Starting Codex…",
-      "aiProcessing": "AI processing: {{label}}",
-      "aiDone": "AI finished: {{label}}",
-      "coworkReset": "Cowork pipeline reset to default",
-      "coworkUpdated": "Updated step: {{label}}",
-      "coworkMinSteps": "Keep at least one pipeline step.",
-      "coworkDeleted": "Step deleted",
-      "coworkMovedUp": "Step moved up",
-      "coworkMovedDown": "Step moved down",
-      "coworkAdded": "Added step: {{label}}",
-      "coworkStepFailed": "Cowork step failed",
-      "coworkStepStart": "Cowork step started: {{label}}",
-      "coworkRunning": "Cowork: {{label}}…",
-      "coworkDone": "Cowork finished: {{label}}",
-      "coworkPipelineStart": "Cowork pipeline started…",
-      "coworkPipelineRunning": "Cowork pipeline running…",
-      "coworkPipelineDone": "Cowork pipeline completed",
-      "coworkFullResult": "Cowork · full pipeline result",
-      "coworkStepResult": "Cowork · {{label}}"
-    }
   },
   "document": {
     "library": "Documents",
@@ -261,11 +130,5 @@
       "image": "Image",
       "quote": "Quote"
     }
-  },
-  "models": {
-    "academic": "Academic structure",
-    "mermaid": "Mermaid diagrams",
-    "roleplay": "Style rewrite",
-    "cowork": "Cowork pipeline"
   }
 }
