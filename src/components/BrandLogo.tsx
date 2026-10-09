@@ -4,25 +4,20 @@ type BrandLogoProps = {
 
 export function BrandLogo({ className = "brand-logo-mark" }: BrandLogoProps) {
   return (
-    <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <rect x="5" y="7" width="11" height="18" rx="2.5" stroke="currentColor" strokeWidth="2" />
+    <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <circle cx="32" cy="32" r="30" fill="currentColor" />
+      <g fill="#ffffff">
+        <ellipse cx="22" cy="24" rx="9" ry="9" />
+        <ellipse cx="42" cy="24" rx="9" ry="9" />
+        <ellipse cx="32" cy="20" rx="11" ry="11" />
+        <rect x="20" y="29" width="24" height="5" rx="1" />
+        <rect x="17" y="34" width="30" height="9" rx="2" />
+      </g>
       <path
-        d="M8.5 12h4M8.5 16h4M8.5 20h2.5"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
-      <path
-        d="M17 16h3.5l2-2.25M20.5 16 17 18.25"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M23.5 12.5v7M26.5 12.5v7M23.5 16h3"
-        stroke="currentColor"
-        strokeWidth="2"
+        d="M26 50 q3 4 6 0 q3 4 6 0"
+        stroke="#ffffff"
+        strokeWidth="2.5"
+        fill="none"
         strokeLinecap="round"
       />
     </svg>

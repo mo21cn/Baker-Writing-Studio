@@ -132,22 +132,17 @@ select {
   text-overflow: ellipsis;
 }
 
-.brand-logo-wrap {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  color: var(--r2md-brand-on-gradient);
-  background: linear-gradient(
-    135deg,
-    var(--r2md-accent-gradient-from) 0%,
-    var(--r2md-accent-gradient-to) 100%
-  );
-  box-shadow: 0 4px 14px rgba(125, 146, 200, 0.28);
-}
+.brand-logo-wrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: #1f1f23;
+  background: transparent;
+}
 
 .brand-logo-mark {
   width: 22px;
@@ -3198,4 +3193,5 @@ body.is-resizing {
   }
 }
 
+
 
