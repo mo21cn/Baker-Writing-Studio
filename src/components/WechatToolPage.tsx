@@ -1,8 +1,39 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { fetchImportUrl } from "../core/import/fetchImportUrl";
 import { convertWechatHtmlToMarkdown, type ConvertOptions } from "../core/wechat/tool";
 
 type Status = { kind: "idle" | "loading" | "error" | "success"; message: string };
+
+type ExportStatus = "idle" | "exported" | "failed";
+
+/**
+ * Trigger a browser download of `text` as `filename` using Blob + ObjectURL.
+ * Adds a UTF-8 BOM so editors that sniff (Excel, Notepad on some locales)
+ * detect the encoding correctly.
+ */
+function downloadTextFile(text: string, filename: string, mime: string) {
+  const BOM = "﻿";
+  const blob = new Blob([BOM + text], { type: `${mime};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.rel = "noopener";
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(url);
+}
+
+/** Sanitize a WeChat article title into a safe filename stem. */
+function safeFileStem(raw: string, fallback: string): string {
+  const cleaned = raw
+    .replace(/[\\/:*?"<>|\r\n\t]+/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return cleaned || fallback;
+}
 
 export function WechatToolPage() {
   const [url, setUrl] = useState<string>("");
@@ -11,9 +42,10 @@ export function WechatToolPage() {
     includeMetadata: true,
   });
   const [markdown, setMarkdown] = useState<string>("");
+  const [title, setTitle] = useState<string>("");
   const [status, setStatus] = useState<Status>({ kind: "idle", message: "" });
   const [warnings, setWarnings] = useState<string[]>([]);
-  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const [exportStatus, setExportStatus] = useState<ExportStatus>("idle");
 
   const handleConvert = async () => {
     const trimmed = url.trim();
@@ -25,6 +57,7 @@ export function WechatToolPage() {
     setStatus({ kind: "loading", message: "正在抓取文章..." });
     setWarnings([]);
     setMarkdown("");
+    setTitle("");
 
     const fetched = await fetchImportUrl(trimmed);
 
@@ -36,6 +69,7 @@ export function WechatToolPage() {
     try {
       const result = convertWechatHtmlToMarkdown(fetched.html, trimmed, options);
       setMarkdown(result.markdown);
+      setTitle(result.title);
       setWarnings([]);
       setStatus({
         kind: "success",
@@ -49,28 +83,19 @@ export function WechatToolPage() {
     }
   };
 
-  const handleCopy = async () => {
+  const handleExport = () => {
     if (!markdown) {
       return;
     }
     try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(markdown);
-      } else {
-        const textarea = document.createElement("textarea");
-        textarea.value = markdown;
-        textarea.style.position = "fixed";
-        textarea.style.opacity = "0";
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textarea);
-      }
-      setCopyStatus("copied");
+      const stem = safeFileStem(title, "wechat-article");
+      const filename = `${stem}-${Date.now()}.md`;
+      downloadTextFile(markdown, filename, "text/markdown");
+      setExportStatus("exported");
     } catch {
-      setCopyStatus("failed");
+      setExportStatus("failed");
     }
-    window.setTimeout(() => setCopyStatus("idle"), 1600);
+    window.setTimeout(() => setExportStatus("idle"), 1600);
   };
 
   return (
@@ -155,11 +180,15 @@ export function WechatToolPage() {
             <button
               type="button"
               className="tool-btn tool-btn-primary"
-              onClick={handleCopy}
+              onClick={handleExport}
               disabled={!markdown}
-              data-status={copyStatus}
+              data-status={exportStatus}
             >
-              {copyStatus === "copied" ? "已复制" : copyStatus === "failed" ? "复制失败" : "复制"}
+              {exportStatus === "exported"
+                ? "已导出"
+                : exportStatus === "failed"
+                  ? "导出失败"
+                  : "导出 .md"}
             </button>
           </div>
           <textarea
