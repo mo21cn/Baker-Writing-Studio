@@ -1,4 +1,4 @@
-const PRESERVE_CLASS = "r2md-keep";
+const PRESERVE_CLASS = "baker-keep";
 
 function parseFontSizePx(style: string): number | null {
   const match = /font-size:\s*([\d.]+)\s*px/i.exec(style);
@@ -267,7 +267,7 @@ function groupSiblingStatParagraphs(root: Element): void {
       return;
     }
     const wrapper = root.ownerDocument.createElement("div");
-    wrapper.className = `${PRESERVE_CLASS} r2md-wechat-stats`;
+    wrapper.className = `${PRESERVE_CLASS} baker-wechat-stats`;
     group[0].before(wrapper);
     for (const node of group) {
       wrapper.appendChild(node);
@@ -296,7 +296,7 @@ function preserveStyledHeadings(root: Element): void {
       continue;
     }
     const wrapper = root.ownerDocument.createElement("div");
-    wrapper.className = `${PRESERVE_CLASS} r2md-wechat-heading`;
+    wrapper.className = `${PRESERVE_CLASS} baker-wechat-heading`;
     heading.replaceWith(wrapper);
     wrapper.appendChild(heading);
   }
@@ -346,8 +346,8 @@ const NORMALIZE_STEPS: NormalizeStep[] = [
 ];
 
 export function normalizeWechatHtmlForMarkdown(html: string): string {
-  const document = new DOMParser().parseFromString(`<div id="r2md-root">${html}</div>`, "text/html");
-  const root = document.getElementById("r2md-root");
+  const document = new DOMParser().parseFromString(`<div id="baker-root">${html}</div>`, "text/html");
+  const root = document.getElementById("baker-root");
   if (!root) {
     return html;
   }

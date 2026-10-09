@@ -197,7 +197,7 @@ function extractWechatHeadingColor(document: Document, fallback: string): string
 
 function extractWechatThemeTokens(contentHtml: string): ThemeTokenInput {
   const document = new DOMParser().parseFromString(
-    `<div id="r2md-root">${contentHtml}</div>`,
+    `<div id="baker-root">${contentHtml}</div>`,
     "text/html",
   );
 
@@ -234,7 +234,7 @@ export function extractThemeTokens(contentHtml: string, kind?: ImportUrlKind): T
 
   const base = chooseBaseTokens(kind);
   const document = new DOMParser().parseFromString(
-    `<div id="r2md-root">${contentHtml}</div>`,
+    `<div id="baker-root">${contentHtml}</div>`,
     "text/html",
   );
 

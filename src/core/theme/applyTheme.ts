@@ -13,7 +13,7 @@ export interface ApplyThemeOutput {
 
 export function applyThemeHtml(input: ApplyThemeInput): ApplyThemeOutput {
   return {
-    html: `<article class="r2md-article">${input.rawHtml}</article>`,
+    html: `<article class="baker-article">${input.rawHtml}</article>`,
     css: input.theme.css,
     themeId: input.theme.id,
   };

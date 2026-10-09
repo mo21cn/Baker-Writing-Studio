@@ -51,7 +51,7 @@ const defaultTableClose =
   ((tokens, index, options, _environment, renderer) => renderer.renderToken(tokens, index, options));
 
 markdown.renderer.rules.table_open = (tokens, index, options, _environment, renderer): string =>
-  `<div class="r2md-table-scroll">${defaultTableOpen(tokens, index, options, _environment, renderer)}`;
+  `<div class="baker-table-scroll">${defaultTableOpen(tokens, index, options, _environment, renderer)}`;
 markdown.renderer.rules.table_close = (tokens, index, options, _environment, renderer): string =>
   `${defaultTableClose(tokens, index, options, _environment, renderer)}</div>`;
 
@@ -67,7 +67,7 @@ markdown.renderer.rules.fence = (tokens, index, options, environment, renderer):
   const language = token.info.trim().split(/\s+/g)[0]?.toLowerCase();
 
   if (language === "mermaid") {
-    return `<pre class="r2md-mermaid-pending"><code class="language-mermaid">${escapeHtml(token.content.trim())}</code></pre>\n`;
+    return `<pre class="baker-mermaid-pending"><code class="language-mermaid">${escapeHtml(token.content.trim())}</code></pre>\n`;
   }
 
   return defaultFenceRule(tokens, index, options, environment, renderer);

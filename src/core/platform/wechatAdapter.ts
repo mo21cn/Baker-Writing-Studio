@@ -20,7 +20,7 @@ export async function buildWechatOutput(input: PlatformAdapterInput): Promise<Pl
   const warnings = [...(input.warnings ?? [])];
   const hasFormula = /<svg[\s>]/i.test(themed.html);
   const hasExternalImage = /<img\s[^>]*src=["']https?:\/\//i.test(themed.html);
-  const hasMermaid = /r2md-mermaid-pending/i.test(themed.html);
+  const hasMermaid = /baker-mermaid-pending/i.test(themed.html);
 
   if (hasFormula) {
     warnings.push(formulaCompatibilityNote());
@@ -87,9 +87,9 @@ export async function buildWechatOutput(input: PlatformAdapterInput): Promise<Pl
 }
 
 const formulaBlockPattern =
-  /<section\s+class="[^"]*\br2md-formula-block\b[^"]*"[^>]*>[\s\S]*?<\/section>/gi;
+  /<section\s+class="[^"]*\bbaker-formula-block\b[^"]*"[^>]*>[\s\S]*?<\/section>/gi;
 const formulaInlinePattern =
-  /<span\s+class="[^"]*\br2md-formula-inline\b[^"]*"[^>]*>[\s\S]*?<\/span>/gi;
+  /<span\s+class="[^"]*\bbaker-formula-inline\b[^"]*"[^>]*>[\s\S]*?<\/span>/gi;
 
 function extractFormulaPlaceholders(html: string): { html: string; svgMap: Map<string, string> } {
   const svgMap = new Map<string, string>();
@@ -147,11 +147,11 @@ async function inlineExternalImages(html: string): Promise<{ html: string; faile
     try {
       const dataUrl = await fetchImageAsPngDataUrl(source);
       image.setAttribute("src", dataUrl);
-      image.setAttribute("data-r2md-image", "inlined");
+      image.setAttribute("data-baker-image", "inlined");
     } catch {
       failedCount += 1;
       failedSources.push(source);
-      image.setAttribute("data-r2md-image", "external");
+      image.setAttribute("data-baker-image", "external");
     }
   }
 

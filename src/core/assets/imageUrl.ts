@@ -1,4 +1,8 @@
-import { R2MD_ASSET_SCHEME, WECHAT_IMAGE_HOSTS } from "./assetTypes";
+import {
+  BAKER_ASSET_SCHEME,
+  LEGACY_R2MD_ASSET_SCHEME,
+  WECHAT_IMAGE_HOSTS,
+} from "./assetTypes";
 
 const MARKDOWN_IMAGE_RE = /!\[([^\]]*)\]\(([^)]+)\)/g;
 
@@ -16,19 +20,26 @@ export function isRemoteHttpImage(url: string): boolean {
   return /^https?:\/\//i.test(url) || url.startsWith("//");
 }
 
-export function isR2mdAssetUrl(url: string): boolean {
-  return url.startsWith(R2MD_ASSET_SCHEME);
+export function isBakerAssetUrl(url: string): boolean {
+  return url.startsWith(BAKER_ASSET_SCHEME) || url.startsWith(LEGACY_R2MD_ASSET_SCHEME);
 }
 
-export function toR2mdAssetUrl(filename: string): string {
-  return `${R2MD_ASSET_SCHEME}${filename}`;
+export function toBakerAssetUrl(filename: string): string {
+  return `${BAKER_ASSET_SCHEME}${filename}`;
 }
 
-export function filenameFromR2mdAssetUrl(url: string): string | null {
-  if (!isR2mdAssetUrl(url)) {
-    return null;
+export function filenameFromBakerAssetUrl(url: string): string | null {
+  if (url.startsWith(BAKER_ASSET_SCHEME)) {
+    return filenameFromAssetUrl(url, BAKER_ASSET_SCHEME);
   }
-  const filename = url.slice(R2MD_ASSET_SCHEME.length).trim();
+  if (url.startsWith(LEGACY_R2MD_ASSET_SCHEME)) {
+    return filenameFromAssetUrl(url, LEGACY_R2MD_ASSET_SCHEME);
+  }
+  return null;
+}
+
+function filenameFromAssetUrl(url: string, scheme: string): string | null {
+  const filename = url.slice(scheme.length).trim();
   return filename || null;
 }
 

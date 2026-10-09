@@ -1,6 +1,6 @@
 import { ensureDocumentAssetsDir, writeDocumentAssetFile } from "./assetStorage";
 import { saveBrowserAsset } from "./browserAssetStorage";
-import { assetFilename, toR2mdAssetUrl } from "./imageUrl";
+import { assetFilename, toBakerAssetUrl } from "./imageUrl";
 import { isTauriRuntime } from "../import/tauriRuntime";
 
 function extensionFromFile(file: File): string {
@@ -63,6 +63,6 @@ export async function saveUserImage(
 
   return {
     filename,
-    assetUrl: toR2mdAssetUrl(filename),
+    assetUrl: toBakerAssetUrl(filename),
   };
 }

@@ -8,7 +8,7 @@ import {
   isRemoteHttpImage,
   listMarkdownImageUrls,
   replaceMarkdownImageUrl,
-  toR2mdAssetUrl,
+  toBakerAssetUrl,
 } from "./imageUrl";
 import { isTauriRuntime } from "../import/tauriRuntime";
 
@@ -82,7 +82,7 @@ export async function localizeDocumentImages(
 
     try {
       await saveLocalizedImage(docId, entry.url, filename, extension);
-      const localizedUrl = toR2mdAssetUrl(filename);
+      const localizedUrl = toBakerAssetUrl(filename);
       result = replaceMarkdownImageUrl(result, entry.url, localizedUrl);
       assetFiles.push(filename);
     } catch (error) {

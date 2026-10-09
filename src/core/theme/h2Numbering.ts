@@ -9,7 +9,7 @@ export function themeUsesH2Numbering(theme: ThemeDefinition): boolean {
 }
 
 export function stripH2PseudoCss(css: string): string {
-  return css.replace(/\.r2md-article h2::before\s*\{[^}]*\}/g, "");
+  return css.replace(/\.baker-article h2::before\s*\{[^}]*\}/g, "");
 }
 
 export function injectH2Numbering(html: string, badgeColor: string): string {
@@ -18,25 +18,25 @@ export function injectH2Numbering(html: string, badgeColor: string): string {
   }
 
   const document = new DOMParser().parseFromString(
-    `<div class="r2md-numbering-root">${html}</div>`,
+    `<div class="baker-numbering-root">${html}</div>`,
     "text/html",
   );
-  const root = document.querySelector(".r2md-numbering-root");
+  const root = document.querySelector(".baker-numbering-root");
   if (!root) {
     return html;
   }
 
-  const headings = root.querySelectorAll(".r2md-article h2, h2");
+  const headings = root.querySelectorAll(".baker-article h2, h2");
   let index = 0;
 
   headings.forEach((heading) => {
-    if (heading.querySelector(".r2md-h2-badge")) {
+    if (heading.querySelector(".baker-h2-badge")) {
       return;
     }
 
     index += 1;
     const badge = document.createElement("span");
-    badge.className = "r2md-h2-badge";
+    badge.className = "baker-h2-badge";
     badge.textContent = String(index).padStart(2, "0");
     badge.setAttribute(
       "style",

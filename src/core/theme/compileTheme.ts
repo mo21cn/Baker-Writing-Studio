@@ -4,8 +4,8 @@ import { getHeadingLevel } from "./themeTokens";
 
 function h2BadgeCss(primaryColor: string): string {
   return `
-.r2md-article .r2md-h2-badge,
-.r2md-article h2::before {
+.baker-article .baker-h2-badge,
+.baker-article h2::before {
   display: inline-block;
   min-width: 28px;
   margin-right: 10px;
@@ -38,7 +38,7 @@ function headingMargin(level: number): string {
 
 function buildGenericHeadingRule(level: HeadingLevelConfig): string {
   return `
-.r2md-article h${level.level} {
+.baker-article h${level.level} {
   margin: ${headingMargin(level.level)};
   color: ${level.color};
   font-size: ${level.fontSize}px;
@@ -57,7 +57,7 @@ function buildStyledHeadingRule(
 
   if (headingStyle === "wechat") {
     return `
-.r2md-article ${tag} {
+.baker-article ${tag} {
   margin: ${headingMargin(level.level)};
   ${base}
   line-height: 1.4;
@@ -66,7 +66,7 @@ function buildStyledHeadingRule(
 
   if (headingStyle === "card" && level.level === 1) {
     return `
-.r2md-article h1 {
+.baker-article h1 {
   margin: 0 0 24px;
   padding: 18px 20px;
   ${base}
@@ -78,12 +78,12 @@ function buildStyledHeadingRule(
 
   if (headingStyle === "accent-bar" && level.level === 1) {
     return `
-.r2md-article h1 {
+.baker-article h1 {
   margin: 0 0 26px;
   ${base}
   line-height: 1.18;
 }
-.r2md-article h1::after {
+.baker-article h1::after {
   content: "";
   display: block;
   width: 72px;
@@ -95,7 +95,7 @@ function buildStyledHeadingRule(
 
   if (headingStyle === "accent-bar" && level.level === 2) {
     return `
-.r2md-article h2 {
+.baker-article h2 {
   margin: 34px 0 16px;
   padding-left: 12px;
   border-left: 4px solid ${primaryColor};
@@ -105,7 +105,7 @@ function buildStyledHeadingRule(
 
   if (headingStyle === "editorial" && level.level === 1) {
     return `
-.r2md-article h1 {
+.baker-article h1 {
   ${base}
   line-height: 1.25;
   margin: 0 0 24px;
@@ -128,14 +128,14 @@ function buildHeadingCss(tokens: ThemeTokenInput): string {
   const counterCss =
     h2Numbering && sortedLevels.some((entry) => entry.level === 2)
       ? `
-.r2md-article {
-  counter-reset: r2md-h2;
+.baker-article {
+  counter-reset: baker-h2;
 }
-.r2md-article h2 {
-  counter-increment: r2md-h2;
+.baker-article h2 {
+  counter-increment: baker-h2;
 }
-.r2md-article h2::before {
-  content: counter(r2md-h2, decimal-leading-zero);
+.baker-article h2::before {
+  content: counter(baker-h2, decimal-leading-zero);
 }
 ${headingStyle === "card" ? h2BadgeCss(primaryColor) : h2BadgeCss(primaryColor)}`
       : "";
@@ -169,26 +169,26 @@ function buildFormulaCss(tokens: ThemeTokenInput): string {
     : "";
 
   return `
-.r2md-article .r2md-formula-block {
+.baker-article .baker-formula-block {
   margin: 18px 0;
   text-align: center;
   overflow-x: auto;
   color: ${formulaColor};
   font-size: ${fontSize}px;${cardStyles}
 }
-.r2md-article .r2md-formula-block svg {
+.baker-article .baker-formula-block svg {
   color: ${formulaColor};
 }
-.r2md-article .r2md-formula-inline {
+.baker-article .baker-formula-inline {
   display: inline;
   color: ${formulaColor};
   font-size: ${fontSize}px;
   vertical-align: middle;
 }
-.r2md-article .r2md-formula-inline svg {
+.baker-article .baker-formula-inline svg {
   color: ${formulaColor};
 }
-.r2md-article .r2md-formula-error {
+.baker-article .baker-formula-error {
   color: #a33934;
 }`;
 }
@@ -230,7 +230,7 @@ export function compileThemeCss(tokens: ThemeTokenInput): string {
     imageBorderColor !== "transparent" ? `border: 1px solid ${imageBorderColor};` : "";
 
   return `
-.r2md-article {
+.baker-article {
   color: ${textColor};
   font-family: ${fontFamily};
   font-size: ${baseFontSize}px;
@@ -240,66 +240,66 @@ export function compileThemeCss(tokens: ThemeTokenInput): string {
 }
 ${buildHeadingCss(tokens)}
 ${buildFormulaCss(tokens)}
-.r2md-article p {
+.baker-article p {
   margin: ${paragraphSpacing}px 0;
 }
-.r2md-article strong {
+.baker-article strong {
   color: ${strongColor};
 }
-.r2md-article em {
+.baker-article em {
   color: ${mutedColor};
 }
-.r2md-article a {
+.baker-article a {
   color: ${linkColor};
   text-decoration: none;
   ${linkDecoration === "none" ? "" : `border-bottom: 1px ${linkDecoration} ${primaryColor};`}
 }
-.r2md-article blockquote {
+.baker-article blockquote {
   margin: 22px 0;
   padding: ${headingStyle === "card" ? "16px 18px" : "12px 18px"};
   color: ${mutedColor};
   background: ${blockquoteBackground};
   border-left: ${blockquoteBorderWidth}px solid ${primaryColor};
 }
-.r2md-article ul,
-.r2md-article ol {
+.baker-article ul,
+.baker-article ol {
   padding-left: 24px;
 }
-.r2md-article li {
+.baker-article li {
   margin: 8px 0;
 }
-.r2md-article .r2md-table-scroll {
+.baker-article .baker-table-scroll {
   width: 100%;
   overflow-x: auto;
   margin: 22px 0;
 }
-.r2md-article table {
+.baker-article table {
   width: 100%;
   min-width: 560px;
   margin: 0;
   border-collapse: collapse;
   font-size: 14px;
 }
-.r2md-article thead,
-.r2md-article tbody {
+.baker-article thead,
+.baker-article tbody {
   width: 100%;
 }
-.r2md-article tr {
+.baker-article tr {
   border: 1px solid ${borderColor};
 }
-.r2md-article th,
-.r2md-article td {
+.baker-article th,
+.baker-article td {
   padding: 10px 12px;
   border: 1px solid ${borderColor};
   text-align: left;
   vertical-align: top;
   word-break: break-word;
 }
-.r2md-article th {
+.baker-article th {
   background: ${blockquoteBackground};
   color: ${headingColor};
 }
-.r2md-article code {
+.baker-article code {
   padding: 2px 6px;
   border-radius: ${radius}px;
   background: ${codeBackground};
@@ -307,20 +307,20 @@ ${buildFormulaCss(tokens)}
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: ${codeFontSize}px;
 }
-.r2md-article pre {
+.baker-article pre {
   overflow: auto;
   margin: 22px 0;
   padding: 16px;
   border-radius: ${radius}px;
   background: ${preBackground};
 }
-.r2md-article pre code {
+.baker-article pre code {
   padding: 0;
   background: transparent;
   color: ${codeTextColor};
   font-size: ${codeFontSize}px;
 }
-.r2md-article img {
+.baker-article img {
   display: block;
   max-width: 100%;
   margin: 22px auto;
@@ -328,8 +328,8 @@ ${buildFormulaCss(tokens)}
   ${imageBorderCss}
   ${imageShadowCss}
 }
-.r2md-article figcaption,
-.r2md-article .r2md-image-caption {
+.baker-article figcaption,
+.baker-article .baker-image-caption {
   margin-top: 8px;
   color: ${imageCaptionColor};
   font-size: 13px;

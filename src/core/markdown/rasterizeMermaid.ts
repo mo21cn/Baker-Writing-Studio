@@ -5,7 +5,7 @@ import { sanitizeMermaidDefinition } from "./sanitizeMermaid";
 import { preinitializeMermaid } from "./renderMermaid";
 
 const MERMAID_BLOCK_PATTERN =
-  /<pre\s+class="[^"]*\br2md-mermaid-pending\b[^"]*"[^>]*>\s*<code[^>]*>([\s\S]*?)<\/code>\s*<\/pre>/gi;
+  /<pre\s+class="[^"]*\bbaker-mermaid-pending\b[^"]*"[^>]*>\s*<code[^>]*>([\s\S]*?)<\/code>\s*<\/pre>/gi;
 
 function decodeHtmlEntities(value: string): string {
   if (typeof document === "undefined") {
@@ -55,7 +55,7 @@ async function svgToPngDataUrl(svgMarkup: string): Promise<string> {
 
   const { width, height } = parseSvgSize(svgMarkup);
   const wrapper = document.createElement("div");
-  wrapper.className = "r2md-mermaid-export";
+  wrapper.className = "baker-mermaid-export";
   wrapper.style.display = "inline-block";
   wrapper.style.width = `${width}px`;
   wrapper.style.background = "#ffffff";
@@ -85,7 +85,7 @@ async function svgToPngDataUrl(svgMarkup: string): Promise<string> {
 
 async function renderMermaidToPng(definition: string): Promise<string> {
   preinitializeMermaid();
-  const id = `r2md-mermaid-export-${Math.random().toString(36).slice(2, 10)}`;
+  const id = `baker-mermaid-export-${Math.random().toString(36).slice(2, 10)}`;
   const sanitized = sanitizeMermaidDefinition(definition.trim());
   const { svg } = await mermaid.render(id, sanitized);
   return svgToPngDataUrl(svg);
@@ -93,7 +93,7 @@ async function renderMermaidToPng(definition: string): Promise<string> {
 
 function buildMermaidImageTag(dataUrl: string, alt: string): string {
   const safeAlt = alt.replace(/"/g, "&quot;");
-  return `<figure class="r2md-mermaid-image"><img src="${dataUrl}" alt="${safeAlt}" style="max-width:100%;height:auto;display:block;margin:1em auto;" data-r2md-mermaid="rasterized" /></figure>`;
+  return `<figure class="baker-mermaid-image"><img src="${dataUrl}" alt="${safeAlt}" style="max-width:100%;height:auto;display:block;margin:1em auto;" data-baker-mermaid="rasterized" /></figure>`;
 }
 
 /**

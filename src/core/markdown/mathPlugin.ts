@@ -106,7 +106,7 @@ function renderInlineMath(tokens: Token[], index: number): string {
 function renderBlockMath(tokens: Token[], index: number): string {
   const svg = renderMath(tokens[index].content, true);
 
-  return `<section class="r2md-formula-block">${svg}</section>\n`;
+  return `<section class="baker-formula-block">${svg}</section>\n`;
 }
 
 function renderMath(content: string, displayMode: boolean): string {
@@ -117,13 +117,13 @@ function renderMath(content: string, displayMode: boolean): string {
       return svg;
     }
 
-    return `<span class="r2md-formula-inline">${svg}</span>`;
+    return `<span class="baker-formula-inline">${svg}</span>`;
   } catch {
     const escaped = escapeHtml(content);
 
     return displayMode
-      ? `<section class="r2md-formula-block r2md-formula-error">$$ ${escaped} $$</section>`
-      : `<span class="r2md-formula-inline r2md-formula-error">$ ${escaped} $</span>`;
+      ? `<section class="baker-formula-block baker-formula-error">$$ ${escaped} $$</section>`
+      : `<span class="baker-formula-inline baker-formula-error">$ ${escaped} $</span>`;
   }
 }
 

@@ -1,7 +1,7 @@
 import { resolveAssetFileUrl } from "./assetStorage";
 import {
-  filenameFromR2mdAssetUrl,
-  isR2mdAssetUrl,
+  filenameFromBakerAssetUrl,
+  isBakerAssetUrl,
   listMarkdownImageUrls,
   replaceMarkdownImageUrl,
 } from "./imageUrl";
@@ -16,10 +16,10 @@ export async function resolveMarkdownAssetUrls(
 
   let result = markdown;
   for (const entry of listMarkdownImageUrls(markdown)) {
-    if (!isR2mdAssetUrl(entry.url)) {
+    if (!isBakerAssetUrl(entry.url)) {
       continue;
     }
-    const filename = filenameFromR2mdAssetUrl(entry.url);
+    const filename = filenameFromBakerAssetUrl(entry.url);
     if (!filename) {
       continue;
     }

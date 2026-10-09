@@ -1674,23 +1674,23 @@ body.is-resizing {
   box-shadow: var(--baker-shadow);
 }
 
-.r2md-article .r2md-wechat-stats {
+.baker-article .baker-wechat-stats {
   margin: 12px 0 18px;
 }
 
-.r2md-article .r2md-wechat-stats p {
+.baker-article .baker-wechat-stats p {
   margin: 0 0 6px;
   font-size: 13px;
   line-height: 1.6;
 }
 
-.r2md-article .r2md-wechat-heading h2,
-.r2md-article .r2md-wechat-heading h3,
-.r2md-article .r2md-wechat-heading h4 {
+.baker-article .baker-wechat-heading h2,
+.baker-article .baker-wechat-heading h3,
+.baker-article .baker-wechat-heading h4 {
   margin-top: 0;
 }
 
-.r2md-article .r2md-wechat-callout blockquote {
+.baker-article .baker-wechat-callout blockquote {
   margin: 0;
 }
 
@@ -2625,7 +2625,7 @@ body.is-resizing {
   font-size: 12px;
 }
 
-.r2md-mermaid {
+.baker-mermaid {
   margin: 16px 0;
   padding: 12px;
   overflow-x: auto;
@@ -2634,13 +2634,13 @@ body.is-resizing {
   background: #fafbfd;
 }
 
-.r2md-mermaid svg {
+.baker-mermaid svg {
   display: block;
   max-width: 100%;
   height: auto;
 }
 
-.r2md-mermaid-error {
+.baker-mermaid-error {
   margin: 12px 0;
   padding: 10px 12px;
   border: 1px solid #d9d9d9;
@@ -2650,7 +2650,7 @@ body.is-resizing {
   font-size: 12px;
 }
 
-.r2md-mermaid-pending {
+.baker-mermaid-pending {
   border-left: 3px solid #1f1f23;
 }
 

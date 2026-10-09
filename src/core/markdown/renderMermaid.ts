@@ -58,7 +58,7 @@ async function waitForRenderReady(): Promise<void> {
 
 function clearMermaidError(parent: HTMLPreElement): void {
   const sibling = parent.nextElementSibling;
-  if (sibling?.classList.contains("r2md-mermaid-error")) {
+  if (sibling?.classList.contains("baker-mermaid-error")) {
     sibling.remove();
   }
   delete parent.dataset.mermaidRendered;
@@ -77,7 +77,7 @@ function collectMermaidBlocks(container: HTMLElement): HTMLPreElement[] {
     if (!parent || !(parent instanceof HTMLPreElement)) {
       continue;
     }
-    if (parent.classList.contains("r2md-mermaid-pending") || code.classList.contains("language-mermaid")) {
+    if (parent.classList.contains("baker-mermaid-pending") || code.classList.contains("language-mermaid")) {
       // fast path
     } else {
       const definition = decodeHtmlEntities(code.textContent?.trim() ?? "");
@@ -113,7 +113,7 @@ async function renderSingleBlock(parent: HTMLPreElement, generation: number): Pr
     return false;
   }
 
-  const id = `r2md-mermaid-${Math.random().toString(36).slice(2, 10)}`;
+  const id = `baker-mermaid-${Math.random().toString(36).slice(2, 10)}`;
   const sanitized = sanitizeMermaidDefinition(definition);
 
   try {
@@ -123,7 +123,7 @@ async function renderSingleBlock(parent: HTMLPreElement, generation: number): Pr
     }
 
     const wrapper = document.createElement("div");
-    wrapper.className = "r2md-mermaid";
+    wrapper.className = "baker-mermaid";
     wrapper.innerHTML = svg;
     parent.replaceWith(wrapper);
     return true;
@@ -136,7 +136,7 @@ async function renderSingleBlock(parent: HTMLPreElement, generation: number): Pr
     clearMermaidError(parent);
 
     const fallback = document.createElement("div");
-    fallback.className = "r2md-mermaid-error";
+    fallback.className = "baker-mermaid-error";
     fallback.textContent = i18n.t("warnings.mermaidPreviewFailed", { message });
     parent.insertAdjacentElement("afterend", fallback);
     return false;
