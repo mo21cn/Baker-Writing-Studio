@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Read2MD-Studio",
+  "productName": "Baker Writing Studio",
   "version": "0.3.0",
-  "identifier": "com.read2md.studio",
+  "identifier": "com.baker.writing.studio",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://127.0.0.1:5173",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Read2MD Studio",
+        "title": "Baker Writing Studio",
         "width": 1400,
         "height": 900,
         "minWidth": 960,
@@ -27,7 +27,7 @@
       "assetProtocol": {
         "enable": true,
         "scope": [
-          "$APPDATA/read2md-studio/**"
+          "$APPDATA/baker-writing-studio/**"
         ]
       }
     },

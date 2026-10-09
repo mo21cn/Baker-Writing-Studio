@@ -8,7 +8,7 @@ export type ExportedThemeJson = {
   schemaVersion: 1;
   name: string;
   tokens: ThemeTokenInput;
-  createdBy: "Read2MD-Studio";
+  createdBy: "Baker Writing Studio";
   createdAt: string;
 };
 
@@ -20,7 +20,7 @@ export function exportThemeJson(input: {
     schemaVersion: 1,
     name: input.name,
     tokens: input.tokens,
-    createdBy: "Read2MD-Studio",
+    createdBy: "Baker Writing Studio",
     createdAt: new Date().toISOString(),
   };
 }
@@ -65,7 +65,7 @@ export function parseImportedThemeJson(
       schemaVersion: 1,
       name: record.name.trim(),
       tokens: tokensResult.tokens,
-      createdBy: "Read2MD-Studio",
+      createdBy: "Baker Writing Studio",
       createdAt:
         typeof record.createdAt === "string" ? record.createdAt : new Date().toISOString(),
     },

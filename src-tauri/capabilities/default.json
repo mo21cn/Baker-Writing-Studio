@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Default capability for Read2MD Studio",
+  "description": "Default capability for Baker Writing Studio",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -15,55 +15,55 @@
     {
       "identifier": "fs:scope",
       "allow": [
-        { "path": "$APPDATA/read2md-studio" },
-        { "path": "$APPDATA/read2md-studio/**" }
+        { "path": "$APPDATA/baker-writing-studio" },
+        { "path": "$APPDATA/baker-writing-studio/**" }
       ]
     },
     {
       "identifier": "fs:allow-app-read-recursive",
       "allow": [
-        { "path": "$APPDATA/read2md-studio" },
-        { "path": "$APPDATA/read2md-studio/**" }
+        { "path": "$APPDATA/baker-writing-studio" },
+        { "path": "$APPDATA/baker-writing-studio/**" }
       ]
     },
     {
       "identifier": "fs:allow-app-write-recursive",
       "allow": [
-        { "path": "$APPDATA/read2md-studio" },
-        { "path": "$APPDATA/read2md-studio/**" }
+        { "path": "$APPDATA/baker-writing-studio" },
+        { "path": "$APPDATA/baker-writing-studio/**" }
       ]
     },
     {
       "identifier": "fs:allow-app-meta-recursive",
       "allow": [
-        { "path": "$APPDATA/read2md-studio" },
-        { "path": "$APPDATA/read2md-studio/**" }
+        { "path": "$APPDATA/baker-writing-studio" },
+        { "path": "$APPDATA/baker-writing-studio/**" }
       ]
     },
     {
       "identifier": "fs:allow-mkdir",
       "allow": [
-        { "path": "$APPDATA/read2md-studio" },
-        { "path": "$APPDATA/read2md-studio/**" }
+        { "path": "$APPDATA/baker-writing-studio" },
+        { "path": "$APPDATA/baker-writing-studio/**" }
       ]
     },
     {
       "identifier": "fs:allow-read-file",
-      "allow": [{ "path": "$APPDATA/read2md-studio/**" }]
+      "allow": [{ "path": "$APPDATA/baker-writing-studio/**" }]
     },
     {
       "identifier": "fs:allow-write-file",
-      "allow": [{ "path": "$APPDATA/read2md-studio/**" }]
+      "allow": [{ "path": "$APPDATA/baker-writing-studio/**" }]
     },
     {
       "identifier": "fs:allow-remove",
-      "allow": [{ "path": "$APPDATA/read2md-studio/**" }]
+      "allow": [{ "path": "$APPDATA/baker-writing-studio/**" }]
     },
     {
       "identifier": "fs:allow-exists",
       "allow": [
-        { "path": "$APPDATA/read2md-studio" },
-        { "path": "$APPDATA/read2md-studio/**" }
+        { "path": "$APPDATA/baker-writing-studio" },
+        { "path": "$APPDATA/baker-writing-studio/**" }
       ]
     },
     "clipboard-manager:allow-write-html",

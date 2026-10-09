@@ -32,10 +32,9 @@ export function BrandLogo({ className = "brand-logo-mark" }: BrandLogoProps) {
 export function BrandWordmark() {
   return (
     <span className="brand-wordmark">
-      <span className="brand-wordmark-read">Read</span>
-      <span className="brand-wordmark-two">2</span>
-      <span className="brand-wordmark-md">MD</span>
-      <span className="brand-wordmark-studio"> Studio</span>
+      <span className="brand-wordmark-strong">Baker</span>
+      {' '}
+      <span className="brand-wordmark-light">Writing Studio</span>
     </span>
   );
 }

@@ -1,4 +1,4 @@
-export const sampleMarkdown = `# Read2MD Studio
+export const sampleMarkdown = `# Baker Writing Studio
 
 一间轻量的 Markdown 发布工作台，用来写作、预览、排版，并复制为公众号可粘贴 HTML。
 

@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "close": "关闭",
     "cancel": "取消",
@@ -118,7 +118,7 @@
   "ai": {
     "title": "AI 助手",
     "subtitle": "基于本地 Codex，对当前文档一键理解与生成",
-    "desktopOnly": "AI 功能仅桌面端可用，请使用 Tauri 版 Read2MD Studio。",
+    "desktopOnly": "AI 功能仅桌面端可用，请使用 Tauri 版 Baker Writing Studio。",
     "notLoggedIn": "Codex 未登录或会话已过期，请先在设置中完成授权。",
     "openSettings": "打开设置",
     "understand": "理解",

@@ -1,8 +1,8 @@
 [package]
-name = "read2md-studio"
+name = "baker-writing-studio"
 version = "0.3.0"
-description = "Read2MD Studio - Markdown publishing workbench"
-authors = ["Read2MD"]
+description = "Baker Writing Studio - Markdown publishing workbench"
+authors = ["Baker Writing Studio"]
 license = ""
 repository = ""
 edition = "2021"

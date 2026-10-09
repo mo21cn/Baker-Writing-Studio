@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Document, HeadingLevel, ImageRun, Packer, Paragraph, Run, TextRun } from "docx";
 import { Math as DocxMath, latexToMath } from "docx/math";
 import { serializeFormula } from "../core/formula/serializer";
@@ -238,14 +238,14 @@ export function FormulaToolPage({ initialLatex = "\\frac{a}{b}" }: FormulaToolPa
             new TextRun({
               text: usedFallback
                 ? "LaTeX → Word 原生公式转换失败（" + fallbackError + "），已退化为预览 PNG。建议简化 LaTeX 后重试。LaTeX 源码以等宽字体段落保留，可直接复制到 Word 的 MathType / Equation Editor。"
-                : "本文件由 Read2MD Studio 的 Formula 工具导出。公式以 Word 原生 OMML 嵌入，可在 Word 中双击编辑；LaTeX 源码以等宽字体段落保留。",
+                : "本文件由 Baker Writing Studio 的 Formula 工具导出。公式以 Word 原生 OMML 嵌入，可在 Word 中双击编辑；LaTeX 源码以等宽字体段落保留。",
             }),
           ],
         }),
       );
 
       const doc = new Document({
-        creator: "Read2MD Studio",
+        creator: "Baker Writing Studio",
         title: "Formula",
         sections: [
           {
