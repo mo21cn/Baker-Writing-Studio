@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --r2md-bg: #f4f6fb;
   --r2md-bg-glow-purple: rgba(148, 168, 220, 0.32);
   --r2md-bg-glow-warm: rgba(228, 212, 168, 0.1);
@@ -2796,6 +2796,8 @@ body.is-resizing {
   gap: 12px;
   flex-wrap: wrap;
 }
+
+.tool-card-output-actions {   display: flex;   align-items: center;   gap: 8px;   flex-wrap: wrap; }
 
 /* ----------------------------------------------------------------------- */
 /* Buttons used inside tool pages                                           */
