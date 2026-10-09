@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+﻿import { useMemo, useRef, useState } from "react";
 import {
   addColumn,
   addRow,
@@ -13,12 +13,33 @@ import { serializeTable, type TableFormat } from "../core/table/serializer";
 
 type FormatTab = TableFormat;
 
-const FORMATS: { id: FormatTab; label: string; mime: string }[] = [
-  { id: "markdown", label: "Markdown", mime: "text/markdown" },
-  { id: "latex", label: "LaTeX", mime: "application/x-latex" },
-  { id: "csv", label: "CSV", mime: "text/csv" },
-  { id: "html", label: "HTML", mime: "text/html" },
+const FORMATS: { id: FormatTab; label: string; mime: string; extension: string }[] = [
+  { id: "markdown", label: "Markdown", mime: "text/markdown", extension: "md" },
+  { id: "latex", label: "LaTeX", mime: "application/x-latex", extension: "tex" },
+  { id: "csv", label: "CSV", mime: "text/csv", extension: "csv" },
+  { id: "html", label: "HTML", mime: "text/html", extension: "html" },
 ];
+
+type ExportStatus = "idle" | "exported" | "failed";
+
+/**
+ * Trigger a browser download of `text` as `filename` using Blob + ObjectURL.
+ * Adds a UTF-8 BOM so editors that sniff (Excel, Notepad on some locales)
+ * detect the encoding correctly.
+ */
+function downloadTextFile(text: string, filename: string, mime: string) {
+  const BOM = "﻿";
+  const blob = new Blob([BOM + text], { type: `${mime};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.rel = "noopener";
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(url);
+}
 
 interface TableToolPageProps {
   /**
@@ -33,8 +54,8 @@ export function TableToolPage(_props: TableToolPageProps = {}) {
   const [model, setModel] = useState<TableModel>(() => createEmptyTable(3, 3));
   const [activeFormat, setActiveFormat] = useState<FormatTab>("markdown");
   const [importStatus, setImportStatus] = useState<string>("");
-  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
-  const copyTimer = useRef<number | null>(null);
+  const [exportStatus, setExportStatus] = useState<ExportStatus>("idle");
+  const exportTimer = useRef<number | null>(null);
 
   const output = useMemo(() => serializeTable(model, activeFormat), [model, activeFormat]);
 
@@ -94,28 +115,23 @@ export function TableToolPage(_props: TableToolPageProps = {}) {
     setImportStatus(`已从文本导入 ${parsed.cells.length} 行 × ${parsed.cols} 列。`);
   };
 
-  const handleCopy = async () => {
-    if (copyTimer.current !== null) {
-      window.clearTimeout(copyTimer.current);
+  const activeFormatMeta = FORMATS.find((format) => format.id === activeFormat);
+
+  const handleExport = () => {
+    if (!output || !activeFormatMeta) {
+      return;
+    }
+    if (exportTimer.current !== null) {
+      window.clearTimeout(exportTimer.current);
     }
     try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(output);
-      } else {
-        const textarea = document.createElement("textarea");
-        textarea.value = output;
-        textarea.style.position = "fixed";
-        textarea.style.opacity = "0";
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textarea);
-      }
-      setCopyStatus("copied");
+      const filename = `table-${Date.now()}.${activeFormatMeta.extension}`;
+      downloadTextFile(output, filename, activeFormatMeta.mime);
+      setExportStatus("exported");
     } catch {
-      setCopyStatus("failed");
+      setExportStatus("failed");
     }
-    copyTimer.current = window.setTimeout(() => setCopyStatus("idle"), 1600);
+    exportTimer.current = window.setTimeout(() => setExportStatus("idle"), 1600);
   };
 
   return (
@@ -234,10 +250,15 @@ export function TableToolPage(_props: TableToolPageProps = {}) {
               <button
                 type="button"
                 className="tool-btn tool-btn-primary"
-                onClick={handleCopy}
-                data-status={copyStatus}
+                onClick={handleExport}
+                disabled={!output}
+                data-status={exportStatus}
               >
-                {copyStatus === "copied" ? "已复制" : copyStatus === "failed" ? "复制失败" : "复制"}
+                {exportStatus === "exported"
+                  ? "已导出"
+                  : exportStatus === "failed"
+                    ? "导出失败"
+                    : `导出 .${activeFormatMeta?.extension ?? ""}`}
               </button>
             </div>
           </div>
