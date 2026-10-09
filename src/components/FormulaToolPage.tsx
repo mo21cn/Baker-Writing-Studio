@@ -1,5 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { Document, HeadingLevel, ImageRun, Packer, Paragraph, TextRun } from "docx";
+import { Document, HeadingLevel, ImageRun, Packer, Paragraph, Run, TextRun } from "docx";
+import { Math as DocxMath, latexToMath } from "docx/math";
 import { serializeFormula } from "../core/formula/serializer";
 import type { FormulaWrap } from "../core/formula/model";
 import { texToSvg } from "../core/markdown/mathToSvg";
@@ -16,25 +17,6 @@ const WRAP_OPTIONS: { id: FormulaWrap; label: string; description: string }[] = 
 
 type CopyStatus = "idle" | "copied" | "failed";
 type DocxStatus = "idle" | "exporting" | "exported" | "failed";
-
-/**
- * Trigger a browser download of `text` as `filename` using Blob + ObjectURL.
- * Adds a UTF-8 BOM so editors that sniff (Excel, Notepad on some locales)
- * detect the encoding correctly.
- */
-function downloadTextFile(text: string, filename: string, mime: string) {
-  const BOM = "﻿";
-  const blob = new Blob([BOM + text], { type: `${mime};charset=utf-8` });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.rel = "noopener";
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
-}
 
 /** Trigger a browser download of a binary Blob as `filename`. */
 function downloadBlob(blob: Blob, filename: string) {
@@ -77,8 +59,7 @@ function readSvgDimensions(svg: string): { width: number; height: number } {
 
 /**
  * Convert a MathJax SVG string to a PNG blob by rasterising through a
- * canvas. The PNG is returned with a white background so it renders cleanly
- * inside a Word document.
+ * canvas. Used as a fallback when `latexToMath` cannot parse the input.
  */
 async function svgToPngBlob(svg: string, scale = 2): Promise<{ blob: Blob; width: number; height: number }> {
   const { width: intrinsicW, height: intrinsicH } = readSvgDimensions(svg);
@@ -174,18 +155,94 @@ export function FormulaToolPage({ initialLatex = "\\frac{a}{b}" }: FormulaToolPa
     if (docxTimer.current !== null) {
       window.clearTimeout(docxTimer.current);
     }
-    if (!previewSvg || !output.bare.trim()) {
+    if (!output.bare.trim()) {
       setDocxStatus("failed");
       docxTimer.current = window.setTimeout(() => setDocxStatus("idle"), 1600);
       return;
     }
+
     setDocxStatus("exporting");
     try {
-      const { blob, width, height } = await svgToPngBlob(previewSvg);
-      const buffer = await blob.arrayBuffer();
-      // Cap the inline image width at 480 px so it fits inside a Word page.
-      const targetWidth = Math.min(480, width);
-      const targetHeight = Math.round((targetWidth / width) * height);
+      const children: Paragraph[] = [];
+      let usedFallback = false;
+      let fallbackError = "";
+
+      // Primary path: Word-native OMML formula via docx/math.latexToMath.
+      // This avoids Word treating `$...$` as an auto math field and gives the
+      // user a fully editable equation object inside Word.
+      try {
+        const mathChildren = latexToMath(output.bare);
+        const inline = wrap === "inline";
+        children.push(
+          new Paragraph({
+            alignment: inline ? "left" : "center",
+            children: [
+              new Run({
+                children: [new DocxMath({ children: mathChildren })],
+              }),
+            ],
+          }),
+        );
+      } catch (primaryError) {
+        usedFallback = true;
+        fallbackError =
+          primaryError instanceof Error ? primaryError.message : "LaTeX → Word 转换失败。";
+        // Fallback: rasterise the MathJax SVG preview and embed as PNG. The
+        // user still gets a docx with the rendered formula visible.
+        if (previewSvg) {
+          const { blob, width, height } = await svgToPngBlob(previewSvg);
+          const buffer = await blob.arrayBuffer();
+          const targetWidth = Math.min(480, width);
+          const targetHeight = Math.round((targetWidth / width) * height);
+          children.push(
+            new Paragraph({
+              alignment: "center",
+              children: [
+                new ImageRun({
+                  data: buffer,
+                  transformation: { width: targetWidth, height: targetHeight },
+                  type: "png",
+                }),
+              ],
+            }),
+          );
+        }
+      }
+
+      // Include the raw LaTeX as a code-style paragraph so users can copy it
+      // back into Word's equation editor. Crucially we DO NOT use `$...$` in
+      // a regular TextRun — Word would auto-convert that into an inline math
+      // field, which is the "变形" the previous implementation suffered from.
+      children.push(
+        new Paragraph({
+          heading: HeadingLevel.HEADING_2,
+          children: [new TextRun({ text: "LaTeX 源码" })],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: output.bare,
+              font: "Consolas",
+            }),
+          ],
+        }),
+      );
+
+      children.push(
+        new Paragraph({
+          heading: HeadingLevel.HEADING_2,
+          children: [new TextRun({ text: "导出说明" })],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: usedFallback
+                ? "LaTeX → Word 原生公式转换失败（" + fallbackError + "），已退化为预览 PNG。建议简化 LaTeX 后重试。LaTeX 源码以等宽字体段落保留，可直接复制到 Word 的 MathType / Equation Editor。"
+                : "本文件由 Read2MD Studio 的 Formula 工具导出。公式以 Word 原生 OMML 嵌入，可在 Word 中双击编辑；LaTeX 源码以等宽字体段落保留。",
+            }),
+          ],
+        }),
+      );
 
       const doc = new Document({
         creator: "Read2MD Studio",
@@ -198,38 +255,7 @@ export function FormulaToolPage({ initialLatex = "\\frac{a}{b}" }: FormulaToolPa
                 heading: HeadingLevel.HEADING_1,
                 children: [new TextRun({ text: "Formula" })],
               }),
-              new Paragraph({
-                alignment: "center",
-                children: [
-                  new ImageRun({
-                    data: buffer,
-                    transformation: {
-                      width: targetWidth,
-                      height: targetHeight,
-                    },
-                    type: "png",
-                  }),
-                ],
-              }),
-              new Paragraph({
-                heading: HeadingLevel.HEADING_2,
-                children: [new TextRun({ text: "LaTeX 源码" })],
-              }),
-              new Paragraph({
-                children: [new TextRun({ text: output.wrapped })],
-              }),
-              new Paragraph({
-                heading: HeadingLevel.HEADING_2,
-                children: [new TextRun({ text: "导出说明" })],
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text:
-                      "本文件由 Read2MD Studio 的 Formula 工具导出。图片为公式预览 PNG，LaTeX 源码以纯文本形式保留，便于在 Word 中粘贴到 MathType / Equation Editor。",
-                  }),
-                ],
-              }),
+              ...children,
             ],
           },
         ],
