@@ -2,9 +2,13 @@ import { useEffect, useState } from "react";
 import { AiModal } from "./components/AiModal";
 import { DocumentList } from "./components/DocumentList";
 import { EditorPane } from "./components/EditorPane";
+import { FormulaToolPage } from "./components/FormulaToolPage";
 import { PreviewPane } from "./components/PreviewPane";
 import { SettingsModal } from "./components/SettingsModal";
+import { TableToolPage } from "./components/TableToolPage";
 import { Toolbar } from "./components/Toolbar";
+import { ViewTabs, type AppView } from "./components/ViewTabs";
+import { WechatToolPage } from "./components/WechatToolPage";
 import { WorkspaceSplit } from "./components/WorkspaceSplit";
 import { resolveMarkdownAssetUrls } from "./core/assets/resolveAssets";
 import { renderMarkdown } from "./core/markdown/renderMarkdown";
@@ -12,6 +16,7 @@ import { getActiveTheme } from "./core/theme/themes";
 import { useEditorStore } from "./store/editorStore";
 
 const SIDEBAR_COLLAPSED_KEY = "r2md-sidebar-collapsed";
+const VIEW_STORAGE_KEY = "r2md-active-view";
 
 function readSidebarCollapsed(): boolean {
   if (typeof window === "undefined") {
@@ -20,8 +25,20 @@ function readSidebarCollapsed(): boolean {
   return window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1";
 }
 
+function readStoredView(): AppView {
+  if (typeof window === "undefined") {
+    return "editor";
+  }
+  const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
+  if (stored === "editor" || stored === "wechat" || stored === "table" || stored === "formula") {
+    return stored;
+  }
+  return "editor";
+}
+
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsed);
+  const [view, setView] = useState<AppView>(readStoredView);
 
   const markdown = useEditorStore((state) => state.markdown);
   const activeDocId = useEditorStore((state) => state.activeDocId);
@@ -51,6 +68,12 @@ function App() {
     };
   }, [activeDocId, markdown]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(VIEW_STORAGE_KEY, view);
+    }
+  }, [view]);
+
   const rendered = renderMarkdown({
     markdown: previewMarkdown,
   });
@@ -64,22 +87,32 @@ function App() {
     });
   };
 
+  const showDocumentList = view === "editor";
+
   return (
     <div className="app-shell">
       <Toolbar markdownValue={markdown} />
+      <ViewTabs current={view} onChange={setView} />
       <main className="workspace">
-        <DocumentList collapsed={sidebarCollapsed} onToggleCollapse={toggleSidebar} />
-        <WorkspaceSplit
-          left={<EditorPane markdownValue={markdown} onMarkdownChange={setMarkdown} />}
-          right={
-            <PreviewPane
-              rawHtml={rendered.rawHtml}
-              theme={activeTheme}
-              themeId={themeId}
-              onThemeChange={setThemeId}
-            />
-          }
-        />
+        {showDocumentList && (
+          <DocumentList collapsed={sidebarCollapsed} onToggleCollapse={toggleSidebar} />
+        )}
+        {view === "editor" && (
+          <WorkspaceSplit
+            left={<EditorPane markdownValue={markdown} onMarkdownChange={setMarkdown} />}
+            right={
+              <PreviewPane
+                rawHtml={rendered.rawHtml}
+                theme={activeTheme}
+                themeId={themeId}
+                onThemeChange={setThemeId}
+              />
+            }
+          />
+        )}
+        {view === "wechat" && <WechatToolPage />}
+        {view === "table" && <TableToolPage />}
+        {view === "formula" && <FormulaToolPage />}
       </main>
       <AiModal />
       <SettingsModal />
