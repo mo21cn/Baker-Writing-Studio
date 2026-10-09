@@ -1,19 +1,25 @@
-# Read2MD Studio
+# Baker Writing Studio
 
 **Languages:** [中文](README.md) | English
 
-A lightweight Markdown publishing workbench: write, preview in real time, apply themes, and copy HTML ready for rich-text platforms such as WeChat Official Accounts.
+A Markdown workbench tailored to individual writing workflows: built on top of an editor, live preview, and themed output, Baker Writing Studio integrates three standalone tools — **WeChat Official Accounts → Markdown**, **Markdown table → Markdown / LaTeX**, and **LaTeX formula → LaTeX / Word (.docx)** — plus a one-click **local Markdown import** into the document library.
 
-[![Release](https://img.shields.io/github/v/release/ingeniousfrog/Read2MD-Studio)](https://github.com/ingeniousfrog/Read2MD-Studio/releases)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Forked from](https://img.shields.io/badge/fork-ingeniousfrog%2FRead2MD--Studio-lightgrey)](https://github.com/ingeniousfrog/Read2MD-Studio)
+
+> **About this project**
+> Baker Writing Studio is a private fork of [ingeniousfrog/Read2MD-Studio](https://github.com/ingeniousfrog/Read2MD-Studio) (Apache License 2.0). The original project was created by ingeniousfrog and released under the Apache License 2.0; this fork rebrands, extends, and localizes the project while keeping the original `LICENSE` file and copyright notice intact. **When redistributing, keep the upstream `LICENSE` file and the original attribution.**
+>
+> Upstream copyright: Copyright (c) ingeniousfrog and contributors. Licensed under the Apache License, Version 2.0.
 
 **Core workflow:**
 
 ```text
-Markdown editing → Live preview → Theme styling → Platform HTML → Clipboard
+Markdown edit → Live preview → Theme styling → Platform HTML → Clipboard
+Three standalone tools: WeChat → MD · Table → MD/LaTeX · Formula → LaTeX/Word
 ```
 
-Available as a **Web app** (browser) and **desktop app** (Tauri, **macOS** / **Windows**). Business logic lives in the TypeScript `core/` layer; the UI only composes and interacts—making it easy to add adapters for Zhihu, Juejin, and other platforms later.
+Available as a **Web app** (browser) and **desktop app** (Tauri, **macOS** / **Windows**). Business logic lives in the TypeScript `core/` layer; the UI only composes and interacts — making it easy to add adapters for other content platforms and file formats.
 
 ### Web vs desktop
 
@@ -22,9 +28,9 @@ Available as a **Web app** (browser) and **desktop app** (Tauri, **macOS** / **W
 | Markdown edit / preview / themes | ✅ | ✅ |
 | Copy to WeChat | ✅ | ✅ |
 | URL import (with image localization) | Dev proxy only; production needs your own API | ✅ Native HTTP, no CORS |
-| **AI assistant (local Codex)** | ❌ **Not available** | ✅ |
-
-**The AI assistant is desktop-only.** It invokes the locally installed [Codex CLI](https://github.com/openai/codex) (`codex login` / `codex exec`) through Tauri. Browsers cannot spawn local processes for security reasons, so visiting `http://127.0.0.1` via `npm run dev` **does not** enable AI. Use `npm run tauri:dev`, or install the **macOS .dmg** / **Windows installer** from [Releases](https://github.com/ingeniousfrog/Read2MD-Studio/releases).
+| Local Markdown import | ✅ | ✅ |
+| Three Web tools (WeChat / Table / Formula) | ✅ | ✅ |
+| Formula → Word (native `.docx` + OMML) | ✅ | ✅ |
 
 ---
 
@@ -32,8 +38,8 @@ Available as a **Web app** (browser) and **desktop app** (Tauri, **macOS** / **W
 
 | Platform | Notes |
 |----------|-------|
-| [GitHub Releases](https://github.com/ingeniousfrog/Read2MD-Studio/releases) | **macOS Apple Silicon (arm64):** `Read2MD-Studio_0.3.0_aarch64.dmg` |
-| Same | **Windows 10/11 (x64):** `Read2MD-Studio_0.3.0_x64-setup.exe` |
+| [GitHub Releases](https://github.com/mo21cn/Read2MD-Studio/releases) | **macOS Apple Silicon (arm64):** `Baker Writing Studio_0.3.0_aarch64.dmg` |
+| Same | **Windows 10/11 (x64):** `Baker Writing Studio_0.3.0_x64-setup.exe` |
 | Web | Run `npm run dev` locally, or `npm run build` and deploy `dist/` |
 
 ### macOS install notes
@@ -41,63 +47,62 @@ Available as a **Web app** (browser) and **desktop app** (Tauri, **macOS** / **W
 The desktop build is **ad-hoc signed and not notarized**. If Safari shows “damaged” or the app won’t open after download, run this in Terminal and try again:
 
 ```bash
-xattr -cr /Applications/Read2MD-Studio.app
+xattr -cr "/Applications/Baker Writing Studio.app"
 ```
 
-You can also **right-click Read2MD-Studio → Open** in Applications (confirm once on first launch). If it still fails, remove the old app and reinstall the latest dmg from Releases.
+You can also **right-click Baker Writing Studio → Open** in Applications (confirm once on first launch). If it still fails, remove the old app and reinstall the latest dmg from Releases.
 
 ### Windows install notes
 
 - For **Windows 10 / 11, 64-bit (x64)**
 - Requires **Microsoft Edge WebView2** (usually preinstalled on Win10/11)
-- Run `Read2MD-Studio_0.3.0_x64-setup.exe` and follow the NSIS installer; launch from the Start menu or desktop shortcut
+- Run `Baker Writing Studio_0.3.0_x64-setup.exe` and follow the NSIS installer; launch from the Start menu or desktop shortcut
 
 ---
 
 ## Features
 
+### Main editor
+
 - **Editor**: CodeMirror 6 with Markdown syntax highlighting; **paste / drag-and-drop images** into local assets
 - **Preview**: `markdown-it` rendering, MathJax SVG math, highlight.js code blocks; **live Mermaid diagrams** (with auto-fix for bracket labels in node text)
 - **Themes**: Built-in `clean` / `tech` / `wechat-card`, custom tokens, JSON import/export, dynamic heading levels (H1–H6 add/remove)
 - **Document library**: Multi-document management; drafts and theme settings auto-saved to `localStorage`
+- **Local Markdown import**: An **Import MD** button on the document sidebar (just before **Import URL**) lets you pick `.md` / `.markdown` files and add them as new documents in one step
 - **URL import**: WeChat articles / generic pages → Markdown (math and code blocks preserved; WeChat HTML keeps tables, blockquotes, styled headings when possible)
-- **Image localization**: External images downloaded to `assets/{docId}/` on import; Markdown uses `r2md-asset:` URLs; preview resolves them and assets are removed when a document is deleted
+- **Image localization**: External images downloaded to `assets/{docId}/` on import; Markdown uses `baker-asset:` URLs; preview resolves them and assets are removed when a document is deleted
 - **WeChat copy**: CSS inlining, HTML sanitization, math SVG protection, external images inlined as data URLs when possible
 - **Desktop**: Tauri native window; URL import via HTTP plugin without browser CORS; local images previewed via the asset protocol
-- **AI assistant (desktop only)**: Entry on the Preview header; calls the local Codex CLI for paper structuring, Mermaid diagrams, style rewriting, and an editable Cowork pipeline; live run logs and per-step result history
-- **Layout**: Toolbar, document sidebar, and pane headers stay fixed; only editor and preview content scroll
+- **Long-image export**: Export the Preview pane as PNG in one click
+- **Layout**: Toolbar, view tabs, document sidebar, and pane headers stay fixed; only editor and preview content scroll
 
-### Desktop AI assistant (0.3.0)
+### Three Web tools (top tab switcher)
 
-| Module | Description |
-|--------|-------------|
-| **Entry** | **AI assistant** on the Preview header (same row as theme picker); pulsing dot while running |
-| **Settings** | Toolbar **Settings** → Codex path auto-detect, OAuth login/logout, per-capability model (Academic / Mermaid / Roleplay / Cowork) |
-| **Academic** | Structure, summarize, table of contents |
-| **Mermaid** | Flowchart, sequence, mindmap; preview renders ` ```mermaid ` blocks |
-| **Style rewrite** | Academic, WeChat relaxed tone, Xiaohongshu, tech evangelist, custom style |
-| **Cowork pipeline** | Multi-step publish flow; edit action, reorder, add/remove steps; **Run all** / **Restore default**; config persisted locally |
-| **Feedback** | Terminal-style run log; tabbed result history; apply to doc (append / replace / new document) |
+| Tool | Entry | Purpose |
+|------|-------|---------|
+| **WeChat → MD** | `Wechat` tab | Paste WeChat Official Account article HTML or plain text; auto-convert to clean Markdown (preserving code blocks, math, lists, blockquotes) |
+| **Table → MD / LaTeX** | `Table` tab | Detect Markdown / HTML / text-aligned table fragments and emit a normalized Markdown table or a LaTeX `tabular` environment (toggleable output and alignment) |
+| **Formula → LaTeX / Word** | `Formula` tab | Parse LaTeX / image formulas; output copy-ready LaTeX source, plus a Word `.docx` with **natively embedded OMML math** that you can keep editing in Microsoft Word |
 
-**Prerequisites:** Install [Codex CLI](https://github.com/openai/codex) locally. A green **Logged in** status in Settings means you are ready—re-login only when the session expires.
+The tool pages share the document library with the main editor: WeChat → MD conversion results can land in the library directly, and Table / Formula outputs can be copied or exported as files in one click.
 
 ---
 
 ## Changelog
 
-### v0.3.0 (current)
+### v0.3.0 (current / Baker Writing Studio)
 
+- **Rebrand**: From Read2MD Studio to Baker Writing Studio — new chef-hat mark, grayscale palette, dark sidebar
+- **Three Web tools**: WeChat → MD, Table → MD/LaTeX, Formula → LaTeX/Word
+- **Formula → Word export**: Generates a `.docx` with native OMML formulas via `docx` + `math`, fully editable in Microsoft Word
+- **Local Markdown import**: New **Import MD** button on the document sidebar — pick an `.md` file and create a new document in one click
 - **Bilingual UI**: Toolbar language switch; full i18n across the app
-- **Codex usage**: Settings page shows Session / Weekly quota and Credits
-- **Long-image export**: Export the Preview pane as PNG in one click
 - **Mermaid stability**: Live preview; diagrams rasterized to images when copying for WeChat
 - **WeChat import fixes**: List items, display math, blockquote raw HTML leaks
 - **WeChat copy fix**: Desktop native clipboard API; long posts with Mermaid copy more reliably
-- **AI assistant** on desktop via local Codex CLI; not available on Web
-- **Cowork pipeline**: Editable steps, run all, persisted config
 - **Windows desktop**: x64 installer (`.exe`) on Releases
 
-### v0.1.0
+### v0.1.0 (original Read2MD Studio release)
 
 - Initial release: Markdown edit/preview/themes, WeChat copy, URL import, image localization, macOS dmg
 
@@ -113,13 +118,14 @@ flowchart TB
     TB[Toolbar<br/>Settings · Copy to WeChat]
     DL[DocumentList<br/>Library / Import]
     EP[EditorPane<br/>CodeMirror]
-    PP[PreviewPane<br/>Preview + AI + Theme]
-    AI[AiModal / SettingsModal]
+    PP[PreviewPane<br/>Preview + Theme]
+    WT[WechatToolPage]
+    TT[TableToolPage]
+    FT[FormulaToolPage]
   end
 
   subgraph State["State Layer"]
     ZS["editorStore<br/>Documents / Theme / Clipboard"]
-    AS2["aiStore<br/>Codex / Cowork / Results"]
   end
 
   subgraph Core["Core Layer (src/core/)"]
@@ -127,28 +133,29 @@ flowchart TB
     TH["theme/<br/>tokens · compileTheme · applyTheme"]
     PL["platform/<br/>wechatAdapter · commonAdapter"]
     CP["copy/<br/>copyHtml"]
-    IM["import/<br/>fetch · parse · htmlToMarkdown"]
+    IM["import/<br/>fetchWechatArticle · parseWechatHtml"]
+    TBL["table/<br/>detect & format"]
+    FRM["formula/<br/>LaTeX parse · Word OMML"]
+    WCT["wechat/<br/>tool.ts · WeChat convert"]
     AS["assets/<br/>localize · resolve · save"]
-    AIC["ai/<br/>codexClient · presets · aiActions"]
   end
 
   subgraph Runtime["Runtime"]
     WEB["Browser + Vite Dev Proxy<br/>/api/import-url"]
-    TAU["Tauri Desktop<br/>plugin-http · codex.rs"]
+    TAU["Tauri Desktop<br/>plugin-http"]
   end
 
   UI --> ZS
-  UI --> AS2
-  AI --> AS2 --> AIC
   EP --> MD
   PP --> MD --> TH
-  PP --> MD
   TB --> PL --> CP
   DL --> IM
   IM --> AS
+  WT --> WCT
+  TT --> TBL
+  FT --> FRM
   IM --> WEB
   IM --> TAU
-  AIC --> TAU
   EP --> AS
   PP --> AS
 ```
@@ -157,21 +164,23 @@ flowchart TB
 
 ```text
 src/
-  App.tsx                 # Layout: toolbar + doc sidebar + editor/preview split
+  App.tsx                 # Layout: toolbar + view tabs + doc sidebar + editor/preview split
   components/             # Pure UI; no business rules
-    DocumentList.tsx      # Doc list, URL import, rename/delete menu
+    DocumentList.tsx      # Doc list, Import MD / Import URL, rename/delete menu
     EditorPane.tsx        # Markdown editor (paste/drag images)
     editorImageExtension.ts
-    PreviewPane.tsx       # Preview + AI entry + theme picker/config
+    PreviewPane.tsx       # Preview + theme picker/config
     ThemePanel.tsx        # Categorized theme config panel
     HeadingLevelsEditor.tsx
     Toolbar.tsx           # Settings + Copy to WeChat
-    AiModal.tsx           # AI assistant (Cowork, run log, result history)
-    SettingsModal.tsx     # Codex login and model config
-    AiResultActions.tsx   # Apply results: append / replace / new doc
     WorkspaceSplit.tsx    # Draggable split pane
+    ViewTabs.tsx          # Top tab switcher (Editor / Wechat / Table / Formula)
+    WechatToolPage.tsx    # WeChat → Markdown tool
+    TableToolPage.tsx     # Table → MD/LaTeX tool
+    FormulaToolPage.tsx   # Formula → LaTeX/Word tool
+    BrandLogo.tsx         # chef-hat mark + Baker Writing Studio wordmark
+    ImportDialog.tsx      # URL import dialog
   core/
-    ai/                   # Codex client, presets, action runner
     markdown/             # Markdown → HTML, math and Mermaid
     theme/                # Theme tokens, CSS compile, wrap HTML
     platform/             # Platform adapters (currently WeChat)
@@ -179,16 +188,18 @@ src/
     import/               # URL fetch, HTML parse, to Markdown
     assets/               # Image download, localization, preview resolve, paste save
     document/             # Document type definitions
+    wechat/               # WeChat → MD tool implementation
+    table/                # Table → MD/LaTeX tool implementation
+    formula/              # Formula → LaTeX/Word tool implementation
   store/
     editorStore.ts        # Zustand global state + localStorage persistence
-    aiStore.ts            # Codex state, Cowork pipeline, AI result history
   styles/
     globals.css
 server/                   # Dev only: Node fetch scripts for Vite middleware
-src-tauri/                # Tauri desktop shell (Rust, includes codex.rs)
+src-tauri/                # Tauri desktop shell (Rust)
 ```
 
-**Design principle:** React components only call `core/` APIs. Rendering, themes, platform adaptation, sanitization, and clipboard logic stay decoupled from the UI for easier testing and extension.
+**Design principle:** React components only call `core/` APIs. Rendering, themes, platform adaptation, sanitization, clipboard logic, and tool implementations stay decoupled from the UI for easier testing and extension.
 
 ---
 
@@ -200,7 +211,7 @@ src-tauri/                # Tauri desktop shell (Rust, includes codex.rs)
 Markdown
   → renderMarkdown()        # markdown-it + custom mathPlugin
   → rawHtml
-  → applyThemeHtml()        # wrap .r2md-article + theme CSS
+  → applyThemeHtml()        # wrap .baker-article + theme CSS
   → Preview DOM
 ```
 
@@ -236,17 +247,40 @@ User enters URL
   → Write to editor
 ```
 
-### 4. Image assets
+### 4. Local Markdown import
+
+```text
+User clicks Import MD on the sidebar
+  → <input type="file" accept=".md,.markdown">
+  → Read file content (FileReader)
+  → editorStore.importMarkdown({ title, content })
+      Create a new document, switch to it, write into the editor
+  → resolveMarkdownAssetUrls() runs async (no-op when there are no assets)
+```
+
+### 5. Image assets
 
 ```text
 Import external images / editor paste·drop
   → localizeDocumentImages() / saveUserImage()
-      Desktop: AppData/read2md-studio/assets/{docId}/
+      Desktop: AppData/baker-writing-studio/assets/{docId}/
       Web dev: IndexedDB
-  → Markdown references r2md-asset:image-001.webp
+  → Markdown references baker-asset:image-001.webp
   → Preview resolveMarkdownAssetUrls() → convertFileSrc (desktop asset protocol)
   → Copy inlineAssets() tries data URL conversion
   → Delete document → deleteDocumentAssetsDir()
+```
+
+### 6. Formula → Word export
+
+```text
+LaTeX / image formula
+  → core/formula/ parse
+  → intermediate AST
+  → docx + math output
+      .docx (with embedded OMML math)
+  → Browser Blob → a[download]
+  → Desktop Tauri dialog + fs write to the user-chosen path
 ```
 
 ---
@@ -267,10 +301,9 @@ Open http://127.0.0.1:3000/
 3. Pick a theme at the top of the preview; use “Theme config” to fine-tune
 4. Click **“Copy to WeChat”** in the toolbar
 5. Paste into the WeChat backend or another rich-text editor
+6. Switch to the top tabs (`Wechat` / `Table` / `Formula`) to use the three standalone tools; follow the on-page instructions to paste input and generate output
 
-**URL import:** Document sidebar → Import → paste article URL. In dev mode, a local proxy fetches the page; for production Web deploy you need an equivalent API or use the desktop app. For image-heavy articles, prefer the **desktop app** so WeChat images are fully localized.
-
-**AI assistant:** Not available on Web. The Preview header “AI assistant” button is disabled in the browser.
+**URL import:** Document sidebar → Import URL → paste article URL. In dev mode, a local proxy fetches the page; for production Web deploy you need an equivalent API or use the desktop app. For image-heavy articles, prefer the **desktop app** so WeChat images are fully localized.
 
 ### Desktop (macOS / Windows)
 
@@ -282,13 +315,11 @@ npm run tauri:dev
 
 # Local build (output depends on host OS)
 npm run tauri:build
-# macOS: src-tauri/target/release/bundle/dmg/Read2MD-Studio_0.3.0_aarch64.dmg
-# Windows: src-tauri/target/release/bundle/nsis/Read2MD-Studio_0.3.0_x64-setup.exe
+# macOS: src-tauri/target/release/bundle/dmg/Baker Writing Studio_0.3.0_aarch64.dmg
+# Windows: src-tauri/target/release/bundle/nsis/Baker Writing Studio_0.3.0_x64-setup.exe
 ```
 
-Current version: **0.3.0**. Pre-built installers: [Releases](https://github.com/ingeniousfrog/Read2MD-Studio/releases) (macOS dmg / Windows exe).
-
-**AI assistant:** Requires Codex CLI installed locally (`codex --version`). First run: toolbar **Settings** → **Log in to Codex** (browser OAuth). When Settings shows a green **Logged in** status, you are ready. Open **AI assistant** from the Preview header; pick a model per capability in Settings. Supported on both macOS and Windows desktop builds.
+Current version: **0.3.0**. Pre-built installers: [Releases](https://github.com/mo21cn/Read2MD-Studio/releases) (macOS dmg / Windows exe).
 
 ### Production build (Web)
 
@@ -327,8 +358,10 @@ This project builds on many excellent open-source libraries:
 | [Turndown](https://github.com/mixmark-io/turndown) | Generic HTML → Markdown |
 | [Tauri](https://github.com/tauri-apps/tauri) | Cross-platform desktop shell |
 | [Mermaid](https://github.com/mermaid-js/mermaid) | Flowchart / sequence preview rendering |
-| [Codex CLI](https://github.com/openai/codex) | Desktop AI backend (installed by user) |
+| [docx](https://github.com/dolanmiu/docx) · [math](https://www.npmjs.com/package/math) | Word `.docx` generation and OMML math |
 | [React](https://github.com/facebook/react) · [Vite](https://github.com/vitejs/vite) · [Zustand](https://github.com/pmndrs/zustand) | UI, bundler, state |
+
+Special thanks to **[ingeniousfrog/Read2MD-Studio](https://github.com/ingeniousfrog/Read2MD-Studio)** — this project is a private re-release built on top of that foundation.
 
 If we missed anyone, please open an Issue.
 
@@ -338,18 +371,16 @@ If we missed anyone, please open an Issue.
 
 This project is licensed under the [Apache License 2.0](LICENSE).
 
-Third-party packages have their own licenses; keep the `LICENSE` file when redistributing.
+The original README and brand assets of upstream projects remain the copyright of their respective authors; this fork re-releases the work while keeping the original `LICENSE` file and upstream copyright notice intact. Third-party packages have their own licenses; keep the `LICENSE` file when redistributing.
 
 ---
 
 ## Current limitations
 
-- **AI assistant is not available on Web**: It depends on the local Codex CLI and Tauri process bridge; browsers cannot call local Codex directly
 - **Mermaid → WeChat copy**: Diagrams render in preview, but copy-to-WeChat still pastes Mermaid as code/text, not as embedded images/SVG
-- **Cowork custom style**: If a pipeline step uses “Custom style”, fill in the style description under the **Style rewrite** tab in the AI modal first
-- **No image CDN yet**: Desktop and Web dev can store images as local `assets` (download on import, paste to insert), but some external images may still fail to inline when copying to WeChat due to CORS—manual upload in the backend may be needed
+- **No image CDN yet**: Desktop and Web dev can store images as local `assets` (download on import, paste to insert), but some external images may still fail to inline when copying to WeChat due to CORS — manual upload in the backend may be needed
 - **Production Web deploy** has no URL fetch proxy or full image localization; use the desktop app for image-heavy workflows
 - Only WeChat copy adapter implemented; Zhihu / Juejin etc. planned
 - No cloud sync or user accounts; drafts and images stay on the local machine
-- macOS desktop build is ad-hoc signed and not notarized; Windows pre-built installer on [Releases](https://github.com/ingeniousfrog/Read2MD-Studio/releases)
+- macOS desktop build is ad-hoc signed and not notarized; Windows pre-built installer on [Releases](https://github.com/mo21cn/Read2MD-Studio/releases)
 - Some WeChat article imports may trigger environment verification depending on network
