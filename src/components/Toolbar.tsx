@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BrandLogo, BrandWordmark } from "./BrandLogo";
 import { copyHtml } from "../core/copy/copyHtml";
@@ -7,7 +7,6 @@ import { buildWechatOutput } from "../core/platform/wechatAdapter";
 import { renderMarkdown } from "../core/markdown/renderMarkdown";
 import { getActiveTheme } from "../core/theme/themes";
 import { setAppLanguage } from "../i18n";
-import { useAiStore } from "../store/aiStore";
 import { useEditorStore } from "../store/editorStore";
 
 interface ToolbarProps {
@@ -25,7 +24,6 @@ export function Toolbar({ markdownValue }: ToolbarProps) {
   const warnings = useEditorStore((state) => state.warnings);
   const setCopyStatus = useEditorStore((state) => state.setCopyStatus);
   const setWarnings = useEditorStore((state) => state.setWarnings);
-  const openSettings = useAiStore((state) => state.openSettings);
 
   const [exportStatus, setExportStatus] = useState<"idle" | "exporting">("idle");
   const [copyDialog, setCopyDialog] = useState<{
@@ -168,14 +166,6 @@ export function Toolbar({ markdownValue }: ToolbarProps) {
             {t("toolbar.languageEn")}
           </button>
         </div>
-        <button
-          type="button"
-          className="toolbar-btn toolbar-btn-ghost toolbar-btn-settings"
-          title={t("common.settings")}
-          onClick={openSettings}
-        >
-          {t("common.settings")}
-        </button>
         <button
           type="button"
           className="toolbar-btn toolbar-btn-ghost toolbar-btn-export"

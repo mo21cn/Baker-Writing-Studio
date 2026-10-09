@@ -1,10 +1,8 @@
-import { useEffect, useState } from "react";
-import { AiModal } from "./components/AiModal";
+﻿import { useEffect, useState } from "react";
 import { DocumentList } from "./components/DocumentList";
 import { EditorPane } from "./components/EditorPane";
 import { FormulaToolPage } from "./components/FormulaToolPage";
 import { PreviewPane } from "./components/PreviewPane";
-import { SettingsModal } from "./components/SettingsModal";
 import { TableToolPage } from "./components/TableToolPage";
 import { Toolbar } from "./components/Toolbar";
 import { ViewTabs, type AppView } from "./components/ViewTabs";
@@ -114,8 +112,6 @@ function App() {
         {view === "table" && <TableToolPage />}
         {view === "formula" && <FormulaToolPage />}
       </main>
-      <AiModal />
-      <SettingsModal />
     </div>
   );
 }
