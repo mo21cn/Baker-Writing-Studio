@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { Document, HeadingLevel, ImageRun, Packer, Paragraph, TextRun } from "docx";
 import { serializeFormula } from "../core/formula/serializer";
 import type { FormulaWrap } from "../core/formula/model";
 import { texToSvg } from "../core/markdown/mathToSvg";
@@ -13,12 +14,120 @@ const WRAP_OPTIONS: { id: FormulaWrap; label: string; description: string }[] = 
   { id: "display", label: "独占 $$...$$", description: "用于独立公式块" },
 ];
 
+type CopyStatus = "idle" | "copied" | "failed";
+type DocxStatus = "idle" | "exporting" | "exported" | "failed";
+
+/**
+ * Trigger a browser download of `text` as `filename` using Blob + ObjectURL.
+ * Adds a UTF-8 BOM so editors that sniff (Excel, Notepad on some locales)
+ * detect the encoding correctly.
+ */
+function downloadTextFile(text: string, filename: string, mime: string) {
+  const BOM = "﻿";
+  const blob = new Blob([BOM + text], { type: `${mime};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.rel = "noopener";
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(url);
+}
+
+/** Trigger a browser download of a binary Blob as `filename`. */
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.rel = "noopener";
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Parse the MathJax SVG string and read its declared width/height. We need the
+ * intrinsic size so the exported PNG is sharp on the page and the docx image
+ * can be scaled without artifacts.
+ */
+function readSvgDimensions(svg: string): { width: number; height: number } {
+  const match = /<svg[^>]*\bwidth="([^"]+)"[^>]*\bheight="([^"]+)"/.exec(svg);
+  if (!match) {
+    return { width: 240, height: 60 };
+  }
+  const parse = (raw: string): number => {
+    const value = parseFloat(raw);
+    if (!Number.isFinite(value)) {
+      return 0;
+    }
+    if (/ex$/.test(raw)) {
+      return value * 8;
+    }
+    if (/em$/.test(raw)) {
+      return value * 16;
+    }
+    return value;
+  };
+  return { width: parse(match[1]), height: parse(match[2]) };
+}
+
+/**
+ * Convert a MathJax SVG string to a PNG blob by rasterising through a
+ * canvas. The PNG is returned with a white background so it renders cleanly
+ * inside a Word document.
+ */
+async function svgToPngBlob(svg: string, scale = 2): Promise<{ blob: Blob; width: number; height: number }> {
+  const { width: intrinsicW, height: intrinsicH } = readSvgDimensions(svg);
+  const width = Math.max(120, Math.round(intrinsicW));
+  const height = Math.max(40, Math.round(intrinsicH));
+
+  const svgBlob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+  const svgUrl = URL.createObjectURL(svgBlob);
+
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("无法加载 SVG 以生成 PNG。"));
+      img.src = svgUrl;
+    });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(width * scale);
+    canvas.height = Math.round(height * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("当前环境不支持 Canvas，无法生成 PNG。");
+    }
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob((result) => resolve(result), "image/png");
+    });
+    if (!blob) {
+      throw new Error("Canvas 转 PNG 失败。");
+    }
+    return { blob, width, height };
+  } finally {
+    URL.revokeObjectURL(svgUrl);
+  }
+}
+
 export function FormulaToolPage({ initialLatex = "\\frac{a}{b}" }: FormulaToolPageProps) {
   const [latex, setLatex] = useState<string>(initialLatex);
   const [wrap, setWrap] = useState<FormulaWrap>("inline");
-  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const [copyStatus, setCopyStatus] = useState<CopyStatus>("idle");
+  const [docxStatus, setDocxStatus] = useState<DocxStatus>("idle");
   const [previewError, setPreviewError] = useState<string | null>(null);
   const copyTimer = useRef<number | null>(null);
+  const docxTimer = useRef<number | null>(null);
 
   const output = useMemo(() => serializeFormula({ latex }, wrap), [latex, wrap]);
   const previewSvg = useMemo(() => {
@@ -59,6 +168,81 @@ export function FormulaToolPage({ initialLatex = "\\frac{a}{b}" }: FormulaToolPa
       setCopyStatus("failed");
     }
     copyTimer.current = window.setTimeout(() => setCopyStatus("idle"), 1600);
+  };
+
+  const handleExportDocx = async () => {
+    if (docxTimer.current !== null) {
+      window.clearTimeout(docxTimer.current);
+    }
+    if (!previewSvg || !output.bare.trim()) {
+      setDocxStatus("failed");
+      docxTimer.current = window.setTimeout(() => setDocxStatus("idle"), 1600);
+      return;
+    }
+    setDocxStatus("exporting");
+    try {
+      const { blob, width, height } = await svgToPngBlob(previewSvg);
+      const buffer = await blob.arrayBuffer();
+      // Cap the inline image width at 480 px so it fits inside a Word page.
+      const targetWidth = Math.min(480, width);
+      const targetHeight = Math.round((targetWidth / width) * height);
+
+      const doc = new Document({
+        creator: "Read2MD Studio",
+        title: "Formula",
+        sections: [
+          {
+            properties: {},
+            children: [
+              new Paragraph({
+                heading: HeadingLevel.HEADING_1,
+                children: [new TextRun({ text: "Formula" })],
+              }),
+              new Paragraph({
+                alignment: "center",
+                children: [
+                  new ImageRun({
+                    data: buffer,
+                    transformation: {
+                      width: targetWidth,
+                      height: targetHeight,
+                    },
+                    type: "png",
+                  }),
+                ],
+              }),
+              new Paragraph({
+                heading: HeadingLevel.HEADING_2,
+                children: [new TextRun({ text: "LaTeX 源码" })],
+              }),
+              new Paragraph({
+                children: [new TextRun({ text: output.wrapped })],
+              }),
+              new Paragraph({
+                heading: HeadingLevel.HEADING_2,
+                children: [new TextRun({ text: "导出说明" })],
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text:
+                      "本文件由 Read2MD Studio 的 Formula 工具导出。图片为公式预览 PNG，LaTeX 源码以纯文本形式保留，便于在 Word 中粘贴到 MathType / Equation Editor。",
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+
+      const docxBlob = await Packer.toBlob(doc);
+      const filename = `formula-${Date.now()}.docx`;
+      downloadBlob(docxBlob, filename);
+      setDocxStatus("exported");
+    } catch {
+      setDocxStatus("failed");
+    }
+    docxTimer.current = window.setTimeout(() => setDocxStatus("idle"), 1600);
   };
 
   return (
@@ -107,14 +291,31 @@ export function FormulaToolPage({ initialLatex = "\\frac{a}{b}" }: FormulaToolPa
         <section className="tool-card tool-card-output">
           <div className="tool-card-output-header">
             <h3>预览</h3>
-            <button
-              type="button"
-              className="tool-btn tool-btn-primary"
-              onClick={handleCopy}
-              data-status={copyStatus}
-            >
-              {copyStatus === "copied" ? "已复制" : copyStatus === "failed" ? "复制失败" : "复制 LaTeX"}
-            </button>
+            <div className="tool-card-output-actions">
+              <button
+                type="button"
+                className="tool-btn tool-btn-primary"
+                onClick={handleExportDocx}
+                disabled={docxStatus === "exporting" || !previewSvg}
+                data-status={docxStatus}
+              >
+                {docxStatus === "exporting"
+                  ? "正在转换…"
+                  : docxStatus === "exported"
+                    ? "已导出 Word"
+                    : docxStatus === "failed"
+                      ? "导出失败"
+                      : "转 word"}
+              </button>
+              <button
+                type="button"
+                className="tool-btn tool-btn-primary"
+                onClick={handleCopy}
+                data-status={copyStatus}
+              >
+                {copyStatus === "copied" ? "已复制" : copyStatus === "failed" ? "复制失败" : "复制 LaTeX"}
+              </button>
+            </div>
           </div>
           <div className="formula-preview" aria-live="polite">
             {previewSvg ? (
