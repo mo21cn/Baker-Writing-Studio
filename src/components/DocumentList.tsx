@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DocumentSource } from "../core/document/documentTypes";
 import { useEditorStore } from "../store/editorStore";
@@ -41,12 +41,33 @@ export function DocumentList({ collapsed, onToggleCollapse }: DocumentListProps)
   const renameDocument = useEditorStore((state) => state.renameDocument);
   const removeDocument = useEditorStore((state) => state.removeDocument);
   const importUrlToNewDoc = useEditorStore((state) => state.importUrlToNewDoc);
+  const importMarkdownToNewDoc = useEditorStore((state) => state.importMarkdownToNewDoc);
 
   const [importOpen, setImportOpen] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleImportMarkdownClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImportMarkdownChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+    try {
+      const content = await file.text();
+      await importMarkdownToNewDoc(content, file.name);
+    } catch (error) {
+      // Surfaced via the editor status message; no toast plumbing needed here.
+      console.error("导入 MD 失败:", error);
+    }
+  };
 
   const startRename = (id: string, currentTitle: string) => {
     setOpenMenuId(null);
@@ -101,6 +122,9 @@ export function DocumentList({ collapsed, onToggleCollapse }: DocumentListProps)
         <button type="button" className="sidebar-icon-button" title={t("document.newDoc")} onClick={createDocument}>
           +
         </button>
+        <button type="button" className="sidebar-icon-button" title={t("document.importMdTitle")} onClick={handleImportMarkdownClick}>
+          ⤒
+        </button>
         <button type="button" className="sidebar-icon-button" title={t("document.importUrl")} onClick={() => setImportOpen(true)}>
           ↓
         </button>
@@ -131,6 +155,9 @@ export function DocumentList({ collapsed, onToggleCollapse }: DocumentListProps)
       <div className="document-list-actions">
         <button type="button" className="doc-action-primary" onClick={createDocument}>
           {t("document.newDocButton")}
+        </button>
+        <button type="button" className="doc-action-secondary" onClick={handleImportMarkdownClick}>
+          {t("document.importMd")}
         </button>
         <button type="button" className="doc-action-secondary" onClick={() => setImportOpen(true)}>
           {t("document.importUrl")}
@@ -234,6 +261,15 @@ export function DocumentList({ collapsed, onToggleCollapse }: DocumentListProps)
       {importOpen && (
         <ImportDialog onClose={() => setImportOpen(false)} onImportUrl={importUrlToNewDoc} />
       )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".md,.markdown,.txt,text/markdown,text/plain"
+        style={{ display: "none" }}
+        onChange={handleImportMarkdownChange}
+        aria-hidden="true"
+        tabIndex={-1}
+      />
     </aside>
   );
 }

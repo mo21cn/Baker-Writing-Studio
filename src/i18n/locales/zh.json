@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "close": "关闭",
     "cancel": "取消",
@@ -64,6 +64,7 @@
     "deletedSwitchedTo": "已删除文档，切换到：{{title}}",
     "documentDeleted": "已删除文档",
     "imported": "已导入：{{title}}{{suffix}}",
+    "importedFromFile": "已导入文件：{{title}}",
     "themeSaved": "主题已保存：{{name}}",
     "themeApplied": "已应用主题：{{name}}",
     "savedThemeDeleted": "已删除保存的主题"
@@ -216,6 +217,8 @@
     "newDocButton": "+ 新建",
     "import": "导入",
     "importUrl": "导入 URL",
+    "importMd": "导入 MD",
+    "importMdTitle": "导入 MD",
     "importUrlTitle": "导入 URL",
     "collapse": "收起侧栏",
     "expand": "展开侧栏",

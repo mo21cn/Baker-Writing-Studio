@@ -1,8 +1,8 @@
-import { defaultThemeId } from "../theme/themes";
+﻿import { defaultThemeId } from "../theme/themes";
 import { defaultCustomTokens, type ThemeTokenInput } from "../theme/themeTokens";
 import type { ThemeId } from "../theme/themes";
 
-export type DocumentSource = "blank" | "wechat" | "html";
+export type DocumentSource = "blank" | "wechat" | "html" | "markdown";
 
 export interface StudioDocument {
   id: string;

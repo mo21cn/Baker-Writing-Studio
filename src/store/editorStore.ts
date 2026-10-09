@@ -1,4 +1,4 @@
-import { create } from "zustand";
+﻿import { create } from "zustand";
 import {
   createBlankDocument,
   createImportedDocument,
@@ -80,6 +80,7 @@ interface EditorState {
   renameDocument: (id: string, title: string) => void;
   removeDocument: (id: string) => void;
   importUrlToNewDoc: (url: string) => Promise<{ ok: true } | { ok: false; message: string; verification?: boolean }>;
+  importMarkdownToNewDoc: (content: string, filename: string) => Promise<{ ok: true } | { ok: false; message: string }>;
   relocalizeDocumentImagesIfNeeded: (id: string) => Promise<void>;
   registerAssetFile: (filename: string) => void;
   saveCurrentThemeAsPreset: (name: string) => void;
@@ -750,6 +751,33 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       ...documentToMirror(doc),
       statusMessage: i18n.t("editor.imported", { title: doc.title, suffix: warningSuffix }),
       warnings: localized.warnings,
+    });
+
+    return { ok: true };
+  },
+
+  importMarkdownToNewDoc: async (content, filename) => {
+    const headingMatch = /^\\s*#\\s+(.+?)\\s*$/m.exec(content);
+    const fallback = filename.replace(/\\.(md|markdown|txt)$/i, "");
+    const title = (headingMatch?.[1].trim() || fallback).slice(0, 120) || filename;
+
+    const draft = createImportedDocument({
+      title,
+      markdown: content,
+      tokens: defaultCustomTokens,
+      themeName: "",
+      source: "markdown",
+    });
+
+    const documents = [draft, ...get().documents];
+    persistDocuments(documents);
+    syncLegacyStorage(draft);
+
+    set({
+      documents,
+      activeDocId: draft.id,
+      ...documentToMirror(draft),
+      statusMessage: i18n.t("editor.importedFromFile", { title: draft.title }),
     });
 
     return { ok: true };

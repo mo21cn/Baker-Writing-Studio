@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "close": "Close",
     "cancel": "Cancel",
@@ -64,6 +64,7 @@
     "deletedSwitchedTo": "Document deleted, switched to: {{title}}",
     "documentDeleted": "Document deleted",
     "imported": "Imported: {{title}}{{suffix}}",
+    "importedFromFile": "Imported file: {{title}}",
     "themeSaved": "Theme saved: {{name}}",
     "themeApplied": "Theme applied: {{name}}",
     "savedThemeDeleted": "Saved theme deleted"
@@ -216,6 +217,8 @@
     "newDocButton": "+ New",
     "import": "Import",
     "importUrl": "Import URL",
+    "importMd": "导入 MD",
+    "importMdTitle": "导入 MD",
     "importUrlTitle": "Import URL",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar",
