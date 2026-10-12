@@ -12,14 +12,14 @@
   --baker-accent-hover: #0f0f12;
   --baker-accent-soft: rgba(31, 31, 35, 0.10);
   --baker-accent-warm: #9a9a9a;
-  --baker-accent-gradient-from: #4a4a4f;
-  --baker-accent-gradient-to: #1f1f23;
+  --baker-accent-gradient-from: #5a5a5f;
+  --baker-accent-gradient-to: #3a3a40;
   --baker-brand-on-gradient: #ffffff;
   --baker-danger: #dc2626;
   --baker-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
   --baker-radius: 10px;
   --baker-radius-sm: 8px;
-  --baker-sidebar-bg: #1f1f23;
+  --baker-sidebar-bg: #3a3a40;
   --baker-sidebar-fg: #e8e8ea;
   --baker-sidebar-fg-muted: #a0a0a5;
   --baker-sidebar-fg-subtle: #707075;
@@ -295,6 +295,11 @@ select {
 
 .toolbar-lang-option:not(.is-active):hover {
   color: var(--baker-text);
+}
+
+.toolbar-lang-option:disabled {
+  cursor: progress;
+  opacity: 0.6;
 }
 
 .theme-selector {

@@ -130,5 +130,13 @@
       "image": "图片",
       "quote": "引用"
     }
+  },
+  "translate": {
+    "translating": "正在翻译文档…",
+    "success": "翻译完成",
+    "failed": "翻译失败：{{message}}",
+    "emptyDocument": "文档为空，无需翻译",
+    "warningChunk": "部分片段翻译失败：{{text}}",
+    "languageSwitchHint": "点击将翻译当前文档"
   }
 }

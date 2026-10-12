@@ -130,5 +130,13 @@
       "image": "Image",
       "quote": "Quote"
     }
+  },
+  "translate": {
+    "translating": "Translating document...",
+    "success": "Translation complete",
+    "failed": "Translation failed: {{message}}",
+    "emptyDocument": "Document is empty, nothing to translate",
+    "warningChunk": "Some chunks failed: {{text}}",
+    "languageSwitchHint": "Click to also translate the document"
   }
 }

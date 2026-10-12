@@ -6,14 +6,16 @@ import { exportLongImage } from "../core/export/exportLongImage";
 import { buildWechatOutput } from "../core/platform/wechatAdapter";
 import { renderMarkdown } from "../core/markdown/renderMarkdown";
 import { getActiveTheme } from "../core/theme/themes";
+import { translateMarkdown } from "../core/translate/translateMarkdown";
 import { setAppLanguage } from "../i18n";
 import { useEditorStore } from "../store/editorStore";
 
 interface ToolbarProps {
   markdownValue: string;
+  onMarkdownChange?: (next: string) => void;
 }
 
-export function Toolbar({ markdownValue }: ToolbarProps) {
+export function Toolbar({ markdownValue, onMarkdownChange }: ToolbarProps) {
   const { t, i18n } = useTranslation();
   const activeDocId = useEditorStore((state) => state.activeDocId);
   const themeId = useEditorStore((state) => state.themeId);
@@ -26,6 +28,7 @@ export function Toolbar({ markdownValue }: ToolbarProps) {
   const setWarnings = useEditorStore((state) => state.setWarnings);
 
   const [exportStatus, setExportStatus] = useState<"idle" | "exporting">("idle");
+  const [translateStatus, setTranslateStatus] = useState<"idle" | "translating">("idle");
   const [copyDialog, setCopyDialog] = useState<{
     title: string;
     message: string;
@@ -34,6 +37,31 @@ export function Toolbar({ markdownValue }: ToolbarProps) {
   } | null>(null);
 
   const currentLang = i18n.language.startsWith("zh") ? "zh" : "en";
+
+  const handleLanguageChange = async (target: "zh" | "en") => {
+    if (target === currentLang) return;
+    setAppLanguage(target);
+    if (!onMarkdownChange) return;
+    if (!markdownValue.trim()) {
+      setCopyStatus("success", t("translate.emptyDocument"));
+      return;
+    }
+    setTranslateStatus("translating");
+    setCopyStatus("copying", t("translate.translating"));
+    try {
+      const result = await translateMarkdown(markdownValue, target);
+      if (result.warnings.length > 0) {
+        setWarnings(result.warnings);
+      }
+      onMarkdownChange(result.text);
+      setCopyStatus("success", t("translate.success"));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setCopyStatus("error", t("translate.failed", { message }));
+    } finally {
+      setTranslateStatus("idle");
+    }
+  };
 
   const handleExportLongImage = async () => {
     if (!markdownValue.trim()) {
@@ -148,12 +176,18 @@ export function Toolbar({ markdownValue }: ToolbarProps) {
       </div>
 
       <div className="toolbar-actions toolbar-actions-compact">
-        <div className="toolbar-lang-switch" role="group" aria-label={t("toolbar.languageZh")}>
+        <div
+          className="toolbar-lang-switch"
+          role="group"
+          aria-label={t("toolbar.languageZh")}
+          title={t("translate.languageSwitchHint")}
+        >
           <button
             type="button"
             className={`toolbar-lang-option${currentLang === "zh" ? " is-active" : ""}`}
             aria-pressed={currentLang === "zh"}
-            onClick={() => setAppLanguage("zh")}
+            disabled={translateStatus === "translating"}
+            onClick={() => void handleLanguageChange("zh")}
           >
             {t("toolbar.languageZh")}
           </button>
@@ -161,7 +195,8 @@ export function Toolbar({ markdownValue }: ToolbarProps) {
             type="button"
             className={`toolbar-lang-option${currentLang === "en" ? " is-active" : ""}`}
             aria-pressed={currentLang === "en"}
-            onClick={() => setAppLanguage("en")}
+            disabled={translateStatus === "translating"}
+            onClick={() => void handleLanguageChange("en")}
           >
             {t("toolbar.languageEn")}
           </button>
