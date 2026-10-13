@@ -1,15 +1,17 @@
 /**
  * Markdown document translation. The first version only ships a
- * zh <-> en round trip using the public MyMemory translation API
- * (https://api.mymemory.translated.net). It is intentionally simple:
+ * zh <-> en round trip using the public Google Translate free
+ * endpoint (https://translate.googleapis.com/translate_a/single).
+ * It is intentionally simple:
  *
  *   - The text is split on blank lines into "paragraphs".
  *   - Lines that are pure Markdown syntax (headings, list markers,
  *     blockquote markers, table separators, ...) are kept verbatim.
  *   - Fenced ``` code blocks are copied unchanged.
  *   - Each non-empty translatable paragraph is sent to the API as a
- *     single `q` parameter. MyMemory caps the query length, so very
- *     long paragraphs are further split on sentence boundaries.
+ *     single `q` parameter. Google Translate caps the query length,
+ *     so very long paragraphs are further split on sentence
+ *     boundaries.
  *   - Network calls are throttled to 4 in flight at a time.
  *
  * The function returns the translated Markdown plus a `warnings`
@@ -263,34 +265,27 @@ async function callApi(
   source: string,
   target: string,
 ): Promise<string | null> {
-  const url = new URL("https://api.mymemory.translated.net/get");
+  const url = new URL("https://translate.googleapis.com/translate_a/single");
+  url.searchParams.set("client", "gtx");
+  url.searchParams.set("sl", source);
+  url.searchParams.set("tl", target);
+  url.searchParams.set("dt", "t");
   url.searchParams.set("q", text);
-  url.searchParams.set("langpair", `${source}|${target}`);
   const resp = await fetch(url.toString(), {
     method: "GET",
     headers: { Accept: "application/json" },
   });
   if (!resp.ok) return null;
-  const data = (await resp.json()) as {
-    responseStatus?: number;
-    responseData?: { translatedText?: string };
-  };
-  const translated = data.responseData?.translatedText?.trim();
-  if (!translated) return null;
-  return unescapeHtml(translated);
+  const data = (await resp.json()) as Array<unknown>;
+  // Response shape: [[[translated, original, null, null, score, ...], ...], null, sourceLang, ...]
+  const first = data[0];
+  if (!Array.isArray(first)) return null;
+  const pieces: string[] = [];
+  for (const segment of first) {
+    if (!Array.isArray(segment) || typeof segment[0] !== "string") continue;
+    pieces.push(segment[0]);
+  }
+  const translated = pieces.join("").trim();
+  return translated || null;
 }
 
-/**
- * MyMemory returns HTML-escaped translations. The pieces we care
- * about (`&amp;` etc.) are common enough to unescape so the
- * resulting Markdown stays readable.
- */
-function unescapeHtml(text: string): string {
-  return text
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, " ");
-}

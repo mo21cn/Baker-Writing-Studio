@@ -137,6 +137,9 @@
     "failed": "Translation failed: {{message}}",
     "emptyDocument": "Document is empty, nothing to translate",
     "warningChunk": "Some chunks failed: {{text}}",
-    "languageSwitchHint": "Click to also translate the document"
+    "languageSwitchHint": "Click to translate the current Markdown into the target language",
+    "toolbarGroupLabel": "Translate document",
+    "toZhTitle": "Translate to Chinese",
+    "toEnTitle": "翻译为英文"
   }
 }

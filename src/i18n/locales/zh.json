@@ -137,6 +137,9 @@
     "failed": "翻译失败：{{message}}",
     "emptyDocument": "文档为空，无需翻译",
     "warningChunk": "部分片段翻译失败：{{text}}",
-    "languageSwitchHint": "点击将翻译当前文档"
+    "languageSwitchHint": "点击按钮把当前 MD 文档翻译为目标语言",
+    "toolbarGroupLabel": "翻译文档",
+    "toZhTitle": "翻译为中文",
+    "toEnTitle": "Translate to English"
   }
 }
