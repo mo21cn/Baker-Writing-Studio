@@ -40,6 +40,17 @@ interface ChunkTask {
  * Translate Markdown to the given target language. Preserves fenced
  * code blocks, table separators, list markers, and pure-syntax lines
  * verbatim. Only "prose" paragraphs go through the translation API.
+ *
+ * "Full text" semantics: when the source document mixes both source-
+ * and target-language prose paragraphs (a typical bilingual cheat
+ * sheet with `English paragraph / blank / Chinese translation /
+ * blank / English paragraph / ...`), the algorithm drops every
+ * paragraph that is already in the target language and translates
+ * the rest. The result is a single coherent target-language
+ * document, not an interleaved "对照" version.
+ *
+ * When the source is monolingual (pure-EN or pure-ZH) it is
+ * translated in place as before.
  */
 export async function translateMarkdown(
   markdown: string,
@@ -53,25 +64,60 @@ export async function translateMarkdown(
   }
 
   const slices = sliceMarkdown(markdown);
+  const languages = slices.map(classifySlice);
+  const docHasCjk = languages.some((l) => l === "cjk" || l === "mixed");
+  const docHasLatin = languages.some((l) => l === "latin" || l === "mixed");
+  const isBilingual = docHasCjk && docHasLatin;
+
   const tasks: ChunkTask[] = [];
   const warnings: string[] = [];
+  const dropMask: boolean[] = new Array(slices.length).fill(false);
+
+  // Helper: is the previous non-empty prose slice in the source
+  // language (opposite of the current target)? If a target-language
+  // paragraph is immediately preceded by a source-language paragraph,
+  // we treat it as the redundant "对照" duplicate and drop it.
+  const findPrevProse = (idx: number): number => {
+    for (let j = idx - 1; j >= 0; j -= 1) {
+      if (slices[j].kind === "prose") return j;
+    }
+    return -1;
+  };
+  const isSourceProse = (idx: number): boolean => {
+    if (idx < 0) return false;
+    const text = slices[idx].text;
+    if (target === "zh") {
+      // Source = English
+      return !sliceIsTargetLanguage(text, "zh");
+    }
+    // Source = Chinese
+    return !sliceIsTargetLanguage(text, "en");
+  };
 
   for (let i = 0; i < slices.length; i += 1) {
     const slice = slices[i];
-    if (slice.kind === "prose" && slice.text.trim().length > 0) {
-      tasks.push({
-        source: slice.text,
-        placeholder: `@@BTRSLC${i}@@`,
-      });
+    if (slice.kind !== "prose" || slice.text.trim().length === 0) continue;
+    if (
+      isBilingual &&
+      sliceIsTargetLanguage(slice.text, target) &&
+      isSourceProse(findPrevProse(i))
+    ) {
+      // Drop the target-language paragraph; its source counterpart
+      // one slice above will be translated in its place.
+      dropMask[i] = true;
+      continue;
     }
+    tasks.push({
+      source: slice.text,
+      placeholder: `@@BTRSLC${i}@@`,
+    });
   }
 
   if (tasks.length === 0) {
     return { text: markdown, warnings: [] };
   }
 
-  // 4-way concurrency. MyMemory's free tier is rate-limited but the
-  // limit is generous for short bursts.
+  // 4-way concurrency.
   const concurrency = 4;
   const results = new Array<string | null>(tasks.length).fill(null);
   let cursor = 0;
@@ -109,23 +155,75 @@ export async function translateMarkdown(
   );
   await Promise.all(workers);
 
-  // Reassemble: substitute placeholders back into the slice stream.
+  // Reassemble: substitute placeholders, drop target-language slices,
+  // and collapse consecutive blank lines that appear because of drops.
   const placeholders = new Map<string, string>();
   tasks.forEach((task, idx) => {
     placeholders.set(task.placeholder, results[idx] ?? task.source);
   });
 
   let out = "";
+  let lastWasBlank = false;
   for (let i = 0; i < slices.length; i += 1) {
     const slice = slices[i];
-    if (slice.kind === "prose") {
-      out += placeholders.get(`@@BTRSLC${i}@@`) ?? slice.text;
-    } else {
+    if (slice.kind === "raw") {
+      const isBlank = slice.text.trim() === "";
+      if (dropMask[i - 1] || (isBlank && lastWasBlank)) {
+        // The previous prose slice was dropped (or we already saw a
+        // blank), so this blank line is redundant.
+        continue;
+      }
       out += slice.text;
+      lastWasBlank = isBlank;
+      continue;
     }
+    if (dropMask[i]) {
+      lastWasBlank = false;
+      continue;
+    }
+    const text = placeholders.get(`@@BTRSLC${i}@@`) ?? slice.text;
+    out += text;
+    if (!text.endsWith("\n")) out += "\n";
+    lastWasBlank = false;
   }
 
-  return { text: out, warnings };
+  return { text: out.replace(/\n+$/, "\n"), warnings };
+}
+
+/**
+ * Classify a slice's dominant script.
+ *   - "cjk"    - has CJK Unified Ideographs, no Latin letters
+ *   - "latin"  - has Latin letters, no CJK
+ *   - "mixed"  - has both
+ *   - "none"   - no script-relevant characters (e.g. syntax only)
+ *   - "target-only" - same as the classification above; the special
+ *                    marker is used in `dropMask` when the slice
+ *                    is purely in the target language inside a
+ *                    bilingual document.
+ */
+function classifySlice(
+  slice: Slice,
+): "cjk" | "latin" | "mixed" | "none" {
+  if (slice.kind !== "prose") return "none";
+  const text = slice.text;
+  const cjk = (text.match(/[一-鿿]/g) || []).length;
+  const latin = (text.match(/[A-Za-z]/g) || []).length;
+  if (cjk > 0 && latin > 0) return "mixed";
+  if (cjk > 0) return "cjk";
+  if (latin > 0) return "latin";
+  return "none";
+}
+
+function sliceIsTargetLanguage(text: string, target: TranslateTarget): boolean {
+  const cjk = (text.match(/[一-鿿]/g) || []).length;
+  const latin = (text.match(/[A-Za-z]/g) || []).length;
+  // A single stray CJK letter is enough to call a slice Chinese for
+  // the purposes of "drop the target-language duplicate" when the
+  // document is otherwise bilingual. Most cheat-sheet entries mix
+  // short Latin tokens (paths, abbreviations like "HO") with CJK
+  // prose, so the cjk>0 / latin>0 split is the right call.
+  if (target === "zh") return cjk > 0;
+  return latin > 0 && cjk === 0;
 }
 
 type Slice =

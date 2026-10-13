@@ -14,7 +14,11 @@
     "resetSoon": "Resetting soon",
     "resetInDays": "Resets in {{count}} days",
     "resetInHours": "Resets in {{hours}}h {{minutes}}m",
-    "resetInMinutes": "Resets in {{minutes}} minutes"
+    "resetInMinutes": "Resets in {{minutes}} minutes",
+    "exportMd": "Export MD",
+    "exportMarkdown": "Export Markdown",
+    "exported": "Exported",
+    "exportFailed": "Export failed"
   },
   "toolbar": {
     "subtitle": "Markdown publishing workbench",

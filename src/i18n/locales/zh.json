@@ -14,7 +14,11 @@
     "resetSoon": "即将重置",
     "resetInDays": "{{count}} 天后重置",
     "resetInHours": "{{hours}} 小时 {{minutes}} 分钟后重置",
-    "resetInMinutes": "{{minutes}} 分钟后重置"
+    "resetInMinutes": "{{minutes}} 分钟后重置",
+    "exportMd": "导出 MD",
+    "exportMarkdown": "导出 Markdown",
+    "exported": "已导出",
+    "exportFailed": "导出失败"
   },
   "toolbar": {
     "subtitle": "Markdown 发布工作台",
