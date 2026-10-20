@@ -9,6 +9,7 @@ import type { ThemeDefinition, ThemeId } from "../core/theme/themes";
 import {
   detectDominantLanguage,
   translateMarkdown,
+  type TranslateTarget,
 } from "../core/translate/translateMarkdown";
 import { useEditorStore } from "../store/editorStore";
 import { ThemePanel } from "./ThemePanel";
@@ -67,7 +68,10 @@ export function PreviewPane({ rawHtml, theme, themeId, onThemeChange }: PreviewP
   const [exportStatus, setExportStatus] = useState<ExportStatus>("idle");
   const [translateStatus, setTranslateStatus] =
     useState<TranslateStatus>("idle");
-  const [translateTarget, setTranslateTarget] = useState<"zh" | "en">("zh");
+  // Derived, not state: the label must always name the language the
+  // next click would actually produce, even before any click.
+  const translateTarget: TranslateTarget =
+    markdown.trim() && detectDominantLanguage(markdown) === "zh" ? "en" : "zh";
 
   const themed = applyThemeHtml({
     rawHtml,
@@ -111,9 +115,6 @@ export function PreviewPane({ rawHtml, theme, themeId, onThemeChange }: PreviewP
       setCopyStatus("success", t("translate.emptyDocument"));
       return;
     }
-    const detected = detectDominantLanguage(markdown);
-    const target: TranslateTarget = detected === "zh" ? "en" : "zh";
-    setTranslateTarget(target);
     setTranslateStatus("translating");
     setCopyStatus("copying", t("translate.translating"));
     try {

@@ -78,131 +78,89 @@ export async function translateMarkdown(
     return { text: markdown, warnings: [] };
   }
 
-  const slices = sliceMarkdown(markdown);
-  const languages = slices.map(classifySlice);
-  const docHasCjk = languages.some((l) => l === "cjk" || l === "mixed");
-  const docHasLatin = languages.some((l) => l === "latin" || l === "mixed");
-  const isBilingual = docHasCjk && docHasLatin;
+  const plan = planLines(markdown, target);
 
-  const tasks: ChunkTask[] = [];
+  // Translate only the prose lines. Verbatim lines (code fences, table
+  // rows, pure syntax, blank lines) pass through untouched, and "drop"
+  // lines are the redundant target-language duplicates of the source
+  // line above them.
+  const jobs: Array<{ index: number; text: string }> = [];
   const warnings: string[] = [];
-  const dropMask: boolean[] = new Array(slices.length).fill(false);
-
-  // Helper: is the previous non-empty prose slice in the source
-  // language (opposite of the current target)? If a target-language
-  // paragraph is immediately preceded by a source-language paragraph,
-  // we treat it as the redundant "对照" duplicate and drop it.
-  const findPrevProse = (idx: number): number => {
-    for (let j = idx - 1; j >= 0; j -= 1) {
-      if (slices[j].kind === "prose") return j;
-    }
-    return -1;
-  };
-  const isSourceProse = (idx: number): boolean => {
-    if (idx < 0) return false;
-    const text = slices[idx].text;
-    if (target === "zh") {
-      // Source = English
-      return !sliceIsTargetLanguage(text, "zh");
-    }
-    // Source = Chinese
-    return !sliceIsTargetLanguage(text, "en");
-  };
-
-  for (let i = 0; i < slices.length; i += 1) {
-    const slice = slices[i];
-    if (slice.kind !== "prose" || slice.text.trim().length === 0) continue;
-    if (
-      isBilingual &&
-      sliceIsTargetLanguage(slice.text, target) &&
-      isSourceProse(findPrevProse(i))
-    ) {
-      // Drop the target-language paragraph; its source counterpart
-      // one slice above will be translated in its place.
-      dropMask[i] = true;
-      continue;
-    }
-    tasks.push({
-      source: slice.text,
-      placeholder: `@@BTRSLC${i}@@`,
-    });
+  for (let i = 0; i < plan.length; i += 1) {
+    const entry = plan[i];
+    if (entry.action !== "prose") continue;
+    if (entry.text.trim().length === 0) continue;
+    jobs.push({ index: i, text: entry.text });
   }
 
-  if (tasks.length === 0) {
+  if (jobs.length === 0) {
     return { text: markdown, warnings: [] };
   }
 
-  // 4-way concurrency.
+  // 4-way concurrency keeps the round trips quick without tripping the
+  // provider's rate limit.
   const concurrency = 4;
-  const results = new Array<string | null>(tasks.length).fill(null);
+  const translatedByIndex = new Map<number, string>();
   let cursor = 0;
   const workers = Array.from({ length: concurrency }, () =>
     (async () => {
       while (true) {
-        const idx = cursor;
+        const jobIdx = cursor;
         cursor += 1;
-        if (idx >= tasks.length) return;
-        const task = tasks[idx];
+        if (jobIdx >= jobs.length) return;
+        const job = jobs[jobIdx];
         try {
-          const translated = await translateOne(task.source, sourceLang, targetLang);
+          const translated = await translateOne(job.text, sourceLang, targetLang);
+          translatedByIndex.set(
+            job.index,
+            translated === null
+              ? job.text
+              : translated,
+          );
           if (translated === null) {
             warnings.push(
               i18n.t("translate.warningChunk", {
                 defaultValue: "翻译片段失败：{{text}}",
-                text: task.source.slice(0, 40),
+                text: job.text.slice(0, 40),
               }),
             );
-            results[idx] = task.source;
-          } else {
-            results[idx] = translated;
           }
         } catch (error) {
+          translatedByIndex.set(job.index, job.text);
           warnings.push(
             i18n.t("translate.warningChunk", {
               defaultValue: "翻译片段失败：{{text}}",
-              text: task.source.slice(0, 40),
+              text: job.text.slice(0, 40),
             }) + ` (${(error as Error).message})`,
           );
-          results[idx] = task.source;
         }
       }
     })(),
   );
   await Promise.all(workers);
 
-  // Reassemble: substitute placeholders, drop target-language slices,
-  // and collapse consecutive blank lines that appear because of drops.
-  const placeholders = new Map<string, string>();
-  tasks.forEach((task, idx) => {
-    placeholders.set(task.placeholder, results[idx] ?? task.source);
-  });
+  // Reassemble, collapsing the blank-line runs that dropping the "对照"
+  // duplicates leaves behind.
+  const outLines: string[] = [];
+  let pendingBlank = false;
+  for (let i = 0; i < plan.length; i += 1) {
+    const entry = plan[i];
+    if (entry.action === "drop") continue;
+    const text =
+      entry.action === "prose" ? translatedByIndex.get(i) ?? entry.text : entry.text;
 
-  let out = "";
-  let lastWasBlank = false;
-  for (let i = 0; i < slices.length; i += 1) {
-    const slice = slices[i];
-    if (slice.kind === "raw") {
-      const isBlank = slice.text.trim() === "";
-      if (dropMask[i - 1] || (isBlank && lastWasBlank)) {
-        // The previous prose slice was dropped (or we already saw a
-        // blank), so this blank line is redundant.
-        continue;
-      }
-      out += slice.text;
-      lastWasBlank = isBlank;
+    if (text.trim() === "") {
+      pendingBlank = outLines.length > 0;
       continue;
     }
-    if (dropMask[i]) {
-      lastWasBlank = false;
-      continue;
+    if (pendingBlank) {
+      outLines.push("");
+      pendingBlank = false;
     }
-    const text = placeholders.get(`@@BTRSLC${i}@@`) ?? slice.text;
-    out += text;
-    if (!text.endsWith("\n")) out += "\n";
-    lastWasBlank = false;
+    outLines.push(text);
   }
 
-  return { text: out.replace(/\n+$/, "\n"), warnings };
+  return { text: outLines.join("\n") + "\n", warnings };
 }
 
 /**
@@ -244,6 +202,173 @@ function sliceIsTargetLanguage(text: string, target: TranslateTarget): boolean {
 type Slice =
   | { kind: "prose"; text: string }
   | { kind: "raw"; text: string };
+
+// ---------------------------------------------------------------------------
+// Line-level bilingual handling
+// ---------------------------------------------------------------------------
+
+/**
+ * Split the document into lines tagged with the decision made for each:
+ *   - "drop"     : a target-language line that duplicates the source line
+ *                  immediately above it (the "对照" translation).
+ *   - "verbatim" : code fences, code bodies, table rows, pure syntax.
+ *   - "prose"    : everything else; sent to the translation API.
+ */
+function planLines(
+  markdown: string,
+  target: TranslateTarget,
+): Array<{ action: "drop" | "verbatim" | "prose"; text: string }> {
+  const lines = markdown.split(/\r?\n/);
+  const plan: Array<{ action: "drop" | "verbatim" | "prose"; text: string }> = [];
+  let inFence = false;
+  let lastKeptWasSourceProse = false;
+
+  // Decide whether this is a genuine bilingual "对照" sheet before
+  // dropping anything. Merely finding both scripts is not enough: an
+  // ordinary Chinese article that merely mentions "Markdown" or "Read2MD
+  // Studio" also has both, and dropping its Chinese lines would empty
+  // the document. What distinguishes a cheat sheet is ALTERNATION --
+  // consecutive prose lines flipping between the two languages, either
+  // EN followed by ZH or ZH followed by EN.
+  const proseLines: string[] = [];
+  let fence = false;
+  for (const raw of markdown.split(/\r?\n/)) {
+    if (raw.trimStart().startsWith("```")) {
+      fence = !fence;
+      continue;
+    }
+    if (fence) continue;
+    if (raw.trim() === "") continue;
+    if (isPureSyntax(raw)) continue;
+    proseLines.push(raw);
+  }
+
+  let alternatingPairs = 0;
+  for (let i = 0; i + 1 < proseLines.length; i += 1) {
+    const a = proseLines[i];
+    const b = proseLines[i + 1];
+    if (leadingMarker(a) !== leadingMarker(b)) continue;
+    const zhThenEn = lineIsTargetLanguage(a, "zh") && lineIsTargetLanguage(b, "en");
+    const enThenZh = lineIsTargetLanguage(a, "en") && lineIsTargetLanguage(b, "zh");
+    if (zhThenEn || enThenZh) alternatingPairs += 1;
+  }
+
+  // One adjacent pair is enough to confirm the pattern: the user is
+  // looking at a real bilingual sheet, and every target-language line in
+  // it is a redundant pre-existing translation.
+  const bilingual = alternatingPairs >= 1;
+
+  for (const line of lines) {
+    const isFence = line.trimStart().startsWith("```");
+    if (isFence) {
+      inFence = !inFence;
+      plan.push({ action: "verbatim", text: line });
+      lastKeptWasSourceProse = false;
+      continue;
+    }
+    if (inFence) {
+      plan.push({ action: "verbatim", text: line });
+      continue;
+    }
+    if (line.trim() === "") {
+      plan.push({ action: "verbatim", text: line });
+      lastKeptWasSourceProse = false;
+      continue;
+    }
+    // Blank-line and code-fence resets above also clear the "previous
+    // line was source" memory; the document-level `bilingual` flag
+    // survives them, which is the point.
+    if (isPureSyntax(line)) {
+      plan.push({ action: "verbatim", text: line });
+      lastKeptWasSourceProse = false;
+      continue;
+    }
+
+    // A non-empty prose line.
+    if (
+      (bilingual || lastKeptWasSourceProse) &&
+      lineIsTargetLanguage(line, target)
+    ) {
+      plan.push({ action: "drop", text: line });
+      continue;
+    }
+
+    const isSource = lineIsSourceLanguage(line, target);
+    plan.push({ action: "prose", text: line });
+    lastKeptWasSourceProse = isSource;
+  }
+
+  return plan;
+}
+
+/**
+ * A line counts as "in the target language" when it is predominantly
+ * that language.
+ *
+ * The tolerances are deliberately asymmetric. Chinese technical prose is
+ * saturated with latin tokens -- product names ("BCE-1", "Smoke"),
+ * version strings ("v0.1"), paths, abbreviations ("HO"), inline code --
+ * so a Chinese line may legitimately carry twice as many latin letters as
+ * CJK characters and still be Chinese. English prose, by contrast, only
+ * ever picks up incidental CJK, so latin must dominate it outright.
+ *
+ * Getting this wrong is what previously let the "对照" duplicates
+ * through: a Chinese line whose latin count matched its CJK count was
+ * classified as source on one test and target on the other, so the
+ * drop never fired.
+ */
+function lineIsTargetLanguage(line: string, target: TranslateTarget): boolean {
+  const cjk = countCjk(line);
+  const latin = countLatin(line);
+  if (cjk === 0 && latin === 0) return false;
+  if (target === "zh") return cjk > 0 && cjk * 2 >= latin;
+  return latin > 0 && latin * 3 >= cjk;
+}
+
+/**
+ * The leading Markdown structure of a line: heading hashes, blockquote
+ * markers, bullet / ordered-list prefixes, and the "bold label" pattern
+ * that bilingual cheat sheets use for field names ("**Inputs:**").
+ *
+ * Two lines that state the same fact in two languages share this
+ * prefix; two unrelated paragraphs do not. Returns "" for a plain
+ * paragraph, which pairs with any other plain paragraph.
+ */
+function leadingMarker(line: string): string {
+  const heading = /^(#{1,6})\s+/.exec(line);
+  if (heading) return heading[1];
+
+  const quote = /^((?:>\s*)+)/.exec(line);
+  if (quote) return quote[1];
+
+  const bullet = /^(\s*)([-*+])\s+/.exec(line);
+  if (bullet) return `${bullet[1]}${bullet[2]}`;
+
+  const ordered = /^(\s*\d+)[.)]\s+/.exec(line);
+  if (ordered) return ordered[1];
+
+  const label = /^\s*(\*\*[^*]+\*\*)/.exec(line);
+  if (label) return label[1];
+
+  return "";
+}
+
+/**
+ * Exact negation of lineIsTargetLanguage(). Kept as a named helper so the
+ * drop rule reads clearly, and so the two predicates can never drift into
+ * contradicting each other.
+ */
+function lineIsSourceLanguage(line: string, target: TranslateTarget): boolean {
+  return !lineIsTargetLanguage(line, target);
+}
+
+function countCjk(text: string): number {
+  return (text.match(/[\u4e00-\u9fff]/g) || []).length;
+}
+
+function countLatin(text: string): number {
+  return (text.match(/[A-Za-z]/g) || []).length;
+}
 
 /**
  * Split Markdown into "prose" (translatable) and "raw" (verbatim)
