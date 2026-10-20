@@ -37,6 +37,21 @@ interface ChunkTask {
 }
 
 /**
+ * Detect whether a document reads as Chinese or English, so callers can
+ * pick the opposite language as the translation target without a UI
+ * picker. Counts CJK Unified Ideographs against Latin letters across the
+ * whole document (code fences included -- they are short enough not to
+ * skew the result). Ties default to "en" so an empty / symbol-only
+ * document is translated *into* Chinese, which matches the Chinese-only
+ * UI.
+ */
+export function detectDominantLanguage(markdown: string): "zh" | "en" {
+  const cjk = (markdown.match(/[\u4e00-\u9fff]/g) || []).length;
+  const latin = (markdown.match(/[A-Za-z]/g) || []).length;
+  return cjk > latin ? "zh" : "en";
+}
+
+/**
  * Translate Markdown to the given target language. Preserves fenced
  * code blocks, table separators, list markers, and pure-syntax lines
  * verbatim. Only "prose" paragraphs go through the translation API.

@@ -6,6 +6,10 @@ import {
 } from "../core/markdown/renderMermaid";
 import { applyThemeHtml } from "../core/theme/applyTheme";
 import type { ThemeDefinition, ThemeId } from "../core/theme/themes";
+import {
+  detectDominantLanguage,
+  translateMarkdown,
+} from "../core/translate/translateMarkdown";
 import { useEditorStore } from "../store/editorStore";
 import { ThemePanel } from "./ThemePanel";
 import { ThemeSelector } from "./ThemeSelector";
@@ -18,6 +22,7 @@ interface PreviewPaneProps {
 }
 
 type ExportStatus = "idle" | "exported" | "failed";
+type TranslateStatus = "idle" | "translating" | "done" | "failed";
 
 /**
  * Trigger a browser download of `text` as `filename` using Blob + ObjectURL.
@@ -55,8 +60,14 @@ export function PreviewPane({ rawHtml, theme, themeId, onThemeChange }: PreviewP
   const toggleThemePanel = useEditorStore((state) => state.toggleThemePanel);
   const isThemePanelOpen = useEditorStore((state) => state.isThemePanelOpen);
   const markdown = useEditorStore((state) => state.markdown);
+  const setMarkdown = useEditorStore((state) => state.setMarkdown);
+  const setCopyStatus = useEditorStore((state) => state.setCopyStatus);
+  const setWarnings = useEditorStore((state) => state.setWarnings);
   const previewRef = useRef<HTMLDivElement>(null);
   const [exportStatus, setExportStatus] = useState<ExportStatus>("idle");
+  const [translateStatus, setTranslateStatus] =
+    useState<TranslateStatus>("idle");
+  const [translateTarget, setTranslateTarget] = useState<"zh" | "en">("zh");
 
   const themed = applyThemeHtml({
     rawHtml,
@@ -95,6 +106,33 @@ export function PreviewPane({ rawHtml, theme, themeId, onThemeChange }: PreviewP
     };
   }, [themed.html, rawHtml]);
 
+  const handleTranslate = async () => {
+    if (!markdown.trim()) {
+      setCopyStatus("success", t("translate.emptyDocument"));
+      return;
+    }
+    const detected = detectDominantLanguage(markdown);
+    const target: TranslateTarget = detected === "zh" ? "en" : "zh";
+    setTranslateTarget(target);
+    setTranslateStatus("translating");
+    setCopyStatus("copying", t("translate.translating"));
+    try {
+      const result = await translateMarkdown(markdown, target);
+      if (result.warnings.length > 0) {
+        setWarnings(result.warnings);
+      }
+      setMarkdown(result.text);
+      setTranslateStatus("done");
+      setCopyStatus("success", t("translate.success"));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setTranslateStatus("failed");
+      setCopyStatus("error", t("translate.failed", { message }));
+    } finally {
+      window.setTimeout(() => setTranslateStatus("idle"), 1600);
+    }
+  };
+
   const handleExportMarkdown = () => {
     if (!markdown) {
       return;
@@ -115,6 +153,22 @@ export function PreviewPane({ rawHtml, theme, themeId, onThemeChange }: PreviewP
       <div className="pane-header">
         <span>{t("common.preview")}</span>
         <div className="preview-header-actions">
+          <button
+            type="button"
+            className="preview-translate-md"
+            onClick={() => void handleTranslate()}
+            disabled={translateStatus === "translating" || !markdown}
+            data-status={translateStatus}
+            title={t("translate.buttonHint")}
+          >
+            {translateStatus === "translating"
+              ? t("translate.translating")
+              : translateStatus === "failed"
+                ? t("translate.failedShort")
+                : translateTarget === "zh"
+                  ? t("translate.toEnShort")
+                  : t("translate.toZhShort")}
+          </button>
           <button
             type="button"
             className="preview-export-md"

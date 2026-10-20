@@ -1,44 +1,41 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import en from "./locales/en.json";
 import zh from "./locales/zh.json";
 
-export const LANGUAGE_STORAGE_KEY = "r2md-lang";
-
-function readStoredLanguage(): string {
-  if (typeof window === "undefined") {
-    return "zh";
-  }
-  const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  return stored === "en" ? "en" : "zh";
-}
+/**
+ * Baker Writing Studio ships a Chinese-only UI.
+ *
+ * The original Read2MD Studio had a `中文 / English` toggle in the
+ * toolbar. That toggle used to double as a UI-locale switch and a
+ * Markdown-translation trigger, which made it ambiguous ("did I
+ * just switch the chrome, or rewrite my document?"). The toggle is
+ * gone: the UI language is pinned to Chinese here, and Markdown
+ * translation is a separate, explicit action (see the `翻译` button
+ * in the Preview pane header).
+ *
+ * `en.json` is intentionally still imported by the build so the
+ * English strings stay in the repo as a reference / fallback for
+ * translators, but it is never activated at runtime.
+ */
 
 void i18n.use(initReactI18next).init({
   resources: {
     zh: { translation: zh },
-    en: { translation: en },
   },
-  lng: readStoredLanguage(),
+  lng: "zh",
   fallbackLng: "zh",
   interpolation: {
     escapeValue: false,
   },
 });
 
-export function setAppLanguage(language: "zh" | "en"): void {
-  void i18n.changeLanguage(language);
-  if (typeof document !== "undefined") {
-    document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
-    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-  }
-}
-
-export function getAppLanguage(): "zh" | "en" {
-  return i18n.language === "en" ? "en" : "zh";
-}
-
 if (typeof document !== "undefined") {
-  document.documentElement.lang = getAppLanguage() === "zh" ? "zh-CN" : "en";
+  document.documentElement.lang = "zh-CN";
+}
+
+/** The UI is Chinese-only; kept for call sites that need the value. */
+export function getAppLanguage(): "zh" {
+  return "zh";
 }
 
 export default i18n;

@@ -89,7 +89,7 @@ function App() {
 
   return (
     <div className="app-shell">
-      <Toolbar markdownValue={markdown} onMarkdownChange={setMarkdown} />
+      <Toolbar markdownValue={markdown} />
       <ViewTabs current={view} onChange={setView} />
       <main className="workspace">
         {showDocumentList && (

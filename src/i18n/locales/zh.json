@@ -136,14 +136,14 @@
     }
   },
   "translate": {
-    "translating": "正在翻译文档…",
+    "translating": "翻译中...",
     "success": "翻译完成",
     "failed": "翻译失败：{{message}}",
+    "failedShort": "翻译失败",
     "emptyDocument": "文档为空，无需翻译",
     "warningChunk": "部分片段翻译失败：{{text}}",
-    "languageSwitchHint": "点击按钮把当前 MD 文档翻译为目标语言",
-    "toolbarGroupLabel": "翻译文档",
-    "toZhTitle": "翻译为中文",
-    "toEnTitle": "Translate to English"
+    "buttonHint": "检测文档语言并翻译成另一种语言（中文 <-> English）",
+    "toZhShort": "译成中文",
+    "toEnShort": "译成英文"
   }
 }

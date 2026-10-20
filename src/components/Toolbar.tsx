@@ -6,15 +6,23 @@ import { exportLongImage } from "../core/export/exportLongImage";
 import { buildWechatOutput } from "../core/platform/wechatAdapter";
 import { renderMarkdown } from "../core/markdown/renderMarkdown";
 import { getActiveTheme } from "../core/theme/themes";
-import { translateMarkdown } from "../core/translate/translateMarkdown";
 import { useEditorStore } from "../store/editorStore";
 
 interface ToolbarProps {
   markdownValue: string;
-  onMarkdownChange?: (next: string) => void;
 }
 
-export function Toolbar({ markdownValue, onMarkdownChange }: ToolbarProps) {
+/**
+ * The toolbar carries brand, status, long-image export, and the
+ * copy-to-WeChat action.
+ *
+ * There is deliberately no language toggle here. The original
+ * Read2MD Studio had a `中文 / English` pill that doubled as a UI
+ * locale switch and a Markdown-translation trigger; Baker Writing
+ * Studio is Chinese-only in the chrome, and Markdown translation is
+ * its own explicit button in the Preview pane header.
+ */
+export function Toolbar({ markdownValue }: ToolbarProps) {
   const { t } = useTranslation();
   const activeDocId = useEditorStore((state) => state.activeDocId);
   const themeId = useEditorStore((state) => state.themeId);
@@ -27,41 +35,12 @@ export function Toolbar({ markdownValue, onMarkdownChange }: ToolbarProps) {
   const setWarnings = useEditorStore((state) => state.setWarnings);
 
   const [exportStatus, setExportStatus] = useState<"idle" | "exporting">("idle");
-  const [translateStatus, setTranslateStatus] = useState<"idle" | "translating">("idle");
-  const [lastTranslateTarget, setLastTranslateTarget] = useState<"zh" | "en" | null>(null);
   const [copyDialog, setCopyDialog] = useState<{
     title: string;
     message: string;
     warnings: string[];
     tone: "success" | "error";
   } | null>(null);
-
-  const handleTranslate = async (target: "zh" | "en") => {
-    if (!onMarkdownChange) return;
-    if (!markdownValue.trim()) {
-      setCopyStatus("success", t("translate.emptyDocument"));
-      return;
-    }
-    setTranslateStatus("translating");
-    setCopyStatus("copying", t("translate.translating"));
-    try {
-      const result = await translateMarkdown(markdownValue, target);
-      if (result.warnings.length > 0) {
-        setWarnings(result.warnings);
-      }
-      onMarkdownChange(result.text);
-      setLastTranslateTarget(target);
-      setCopyStatus(
-        result.warnings.length > 0 ? "success" : "success",
-        t("translate.success"),
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      setCopyStatus("error", t("translate.failed", { message }));
-    } finally {
-      setTranslateStatus("idle");
-    }
-  };
 
   const handleExportLongImage = async () => {
     if (!markdownValue.trim()) {
@@ -176,33 +155,6 @@ export function Toolbar({ markdownValue, onMarkdownChange }: ToolbarProps) {
       </div>
 
       <div className="toolbar-actions toolbar-actions-compact">
-        <div
-          className="toolbar-lang-switch"
-          role="group"
-          aria-label={t("translate.toolbarGroupLabel")}
-          title={t("translate.languageSwitchHint")}
-        >
-          <button
-            type="button"
-            className={`toolbar-lang-option${lastTranslateTarget === "zh" ? " is-active" : ""}`}
-            aria-pressed={lastTranslateTarget === "zh"}
-            disabled={translateStatus === "translating"}
-            onClick={() => void handleTranslate("zh")}
-            title={t("translate.toZhTitle")}
-          >
-            中文
-          </button>
-          <button
-            type="button"
-            className={`toolbar-lang-option${lastTranslateTarget === "en" ? " is-active" : ""}`}
-            aria-pressed={lastTranslateTarget === "en"}
-            disabled={translateStatus === "translating"}
-            onClick={() => void handleTranslate("en")}
-            title={t("translate.toEnTitle")}
-          >
-            English
-          </button>
-        </div>
         <button
           type="button"
           className="toolbar-btn toolbar-btn-ghost toolbar-btn-export"
