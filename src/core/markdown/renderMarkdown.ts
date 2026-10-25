@@ -1,6 +1,7 @@
 import MarkdownIt from "markdown-it";
 import hljs from "highlight.js";
 import { mathPlugin } from "./mathPlugin";
+import { sanitizeRenderedHtml } from "./sanitizeHtml";
 
 export interface RenderMarkdownInput {
   markdown: string;
@@ -104,7 +105,10 @@ function escapeHtml(value: string): string {
 
 export function renderMarkdown(input: RenderMarkdownInput): RenderMarkdownOutput {
   const normalized = normalizeMermaidFences(input.markdown);
-  const rawHtml = markdown.render(normalized);
+  // `html: true` lets the document carry arbitrary markup and the preview
+  // injects the result with dangerouslySetInnerHTML, so the sanitizer sits at
+  // the single exit of the renderer.
+  const rawHtml = sanitizeRenderedHtml(markdown.render(normalized));
 
   return {
     rawHtml,
