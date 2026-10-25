@@ -3,8 +3,8 @@ name = "baker-writing-studio"
 version = "0.3.0"
 description = "Baker Writing Studio - Markdown publishing workbench"
 authors = ["Baker Writing Studio"]
-license = ""
-repository = ""
+license = "Apache-2.0"
+repository = "https://github.com/mo21cn/Read2MD-Studio"
 edition = "2021"
 rust-version = "1.77.2"
 
@@ -21,8 +21,6 @@ tauri-build = { version = "2.6.2", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
-base64 = "0.22"
 tauri = { version = "2.11.2", features = ["protocol-asset"] }
 tauri-plugin-clipboard-manager = "2"
 tauri-plugin-log = "2"
