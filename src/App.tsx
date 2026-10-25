@@ -1,17 +1,27 @@
-﻿import { useEffect, useState } from "react";
+﻿import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { DocumentList } from "./components/DocumentList";
 import { EditorPane } from "./components/EditorPane";
-import { FormulaToolPage } from "./components/FormulaToolPage";
 import { PreviewPane } from "./components/PreviewPane";
-import { TableToolPage } from "./components/TableToolPage";
 import { Toolbar } from "./components/Toolbar";
 import { ViewTabs, type AppView } from "./components/ViewTabs";
-import { WechatToolPage } from "./components/WechatToolPage";
 import { WorkspaceSplit } from "./components/WorkspaceSplit";
 import { resolveMarkdownAssetUrls } from "./core/assets/resolveAssets";
 import { renderMarkdown } from "./core/markdown/renderMarkdown";
 import { getActiveTheme } from "./core/theme/themes";
+import { useDebouncedValue } from "./hooks/useDebouncedValue";
 import { useEditorStore } from "./store/editorStore";
+
+// Each tool page is its own tab; splitting them keeps `docx` and the
+// WeChat parser out of the first paint.
+const WechatToolPage = lazy(() =>
+  import("./components/WechatToolPage").then((module) => ({ default: module.WechatToolPage })),
+);
+const TableToolPage = lazy(() =>
+  import("./components/TableToolPage").then((module) => ({ default: module.TableToolPage })),
+);
+const FormulaToolPage = lazy(() =>
+  import("./components/FormulaToolPage").then((module) => ({ default: module.FormulaToolPage })),
+);
 
 const SIDEBAR_COLLAPSED_KEY = "r2md-sidebar-collapsed";
 const VIEW_STORAGE_KEY = "r2md-active-view";
@@ -45,26 +55,29 @@ function App() {
   const customThemeName = useEditorStore((state) => state.customThemeName);
   const setMarkdown = useEditorStore((state) => state.setMarkdown);
   const setThemeId = useEditorStore((state) => state.setThemeId);
+  // Parse at a human pace: the editor stays instant, the preview and the
+  // asset resolution catch up shortly after typing stops.
+  const debouncedMarkdown = useDebouncedValue(markdown, 220);
   const [previewMarkdown, setPreviewMarkdown] = useState(markdown);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
-        const resolved = await resolveMarkdownAssetUrls(activeDocId, markdown);
+        const resolved = await resolveMarkdownAssetUrls(activeDocId, debouncedMarkdown);
         if (!cancelled) {
           setPreviewMarkdown(resolved);
         }
       } catch {
         if (!cancelled) {
-          setPreviewMarkdown(markdown);
+          setPreviewMarkdown(debouncedMarkdown);
         }
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [activeDocId, markdown]);
+  }, [activeDocId, debouncedMarkdown]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -72,9 +85,10 @@ function App() {
     }
   }, [view]);
 
-  const rendered = renderMarkdown({
-    markdown: previewMarkdown,
-  });
+  const rendered = useMemo(
+    () => renderMarkdown({ markdown: previewMarkdown }),
+    [previewMarkdown],
+  );
   const activeTheme = getActiveTheme(themeId, customThemeTokens, customThemeName);
 
   const toggleSidebar = () => {
@@ -108,9 +122,13 @@ function App() {
             }
           />
         )}
-        {view === "wechat" && <WechatToolPage />}
-        {view === "table" && <TableToolPage />}
-        {view === "formula" && <FormulaToolPage />}
+        {view !== "editor" && (
+          <Suspense fallback={<div className="pane">加载中…</div>}>
+            {view === "wechat" && <WechatToolPage />}
+            {view === "table" && <TableToolPage />}
+            {view === "formula" && <FormulaToolPage />}
+          </Suspense>
+        )}
       </main>
     </div>
   );

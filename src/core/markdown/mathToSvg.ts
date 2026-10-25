@@ -29,10 +29,35 @@ export interface TexToSvgOptions {
   displayMode: boolean;
 }
 
+/**
+ * Converting TeX is by far the most expensive part of a render, and the
+ * same formulas show up on every keystroke. A small memo keeps repeated
+ * renders cheap; the cap stops a pathological document from pinning
+ * megabytes of SVG forever.
+ */
+const CACHE_LIMIT = 400;
+const cache = new Map<string, string>();
+
 export function texToSvg(latex: string, options: TexToSvgOptions): string {
+  const key = `${options.displayMode ? "display" : "inline"}\u0000${latex}`;
+  const cached = cache.get(key);
+  if (cached !== undefined) return cached;
+
   const node = mathDocument.convert(latex, {
     display: options.displayMode,
   });
+  const svg = adaptor.innerHTML(node);
 
-  return adaptor.innerHTML(node);
+  cache.set(key, svg);
+  if (cache.size > CACHE_LIMIT) {
+    const oldest = cache.keys().next();
+    if (!oldest.done) cache.delete(oldest.value);
+  }
+
+  return svg;
+}
+
+/** Test hook: how many formulas are memoised right now. */
+export function texCacheSize(): number {
+  return cache.size;
 }

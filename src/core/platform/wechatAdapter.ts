@@ -1,5 +1,4 @@
 import DOMPurify from "dompurify";
-import juice from "juice";
 import i18n from "../../i18n";
 import { inlineR2mdAssetImages } from "../assets/inlineAssets";
 import { rasterizeMermaidInHtml } from "../markdown/rasterizeMermaid";
@@ -49,9 +48,11 @@ export async function buildWechatOutput(input: PlatformAdapterInput): Promise<Pl
     : htmlWithoutSvg;
   const cssForInline = usesH2Numbering ? stripH2PseudoCss(themed.css) : themed.css;
 
-  let inlineHtml = "";
+  let inlineHtml: string;
 
   try {
+    // juice pulls in cheerio; only the copy path needs it.
+    const { default: juice } = await import("juice");
     inlineHtml = juice.inlineContent(htmlForInline, cssForInline, {
       inlinePseudoElements: true,
       preserveImportant: true,
