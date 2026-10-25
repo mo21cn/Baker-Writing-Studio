@@ -144,6 +144,15 @@
     "warningChunk": "部分片段翻译失败：{{text}}",
     "buttonHint": "检测文档语言并翻译成另一种语言（中文 <-> English）",
     "toZhShort": "译成中文",
-    "toEnShort": "译成英文"
+    "toEnShort": "译成英文",
+    "progress": "翻译中 {{done}}/{{total}}",
+    "cancel": "取消",
+    "revert": "还原原文",
+    "revertHint": "恢复翻译前的文档内容",
+    "reverted": "已还原原文",
+    "cancelled": "已取消翻译",
+    "successWithDropped": "翻译完成，已去除 {{count}} 行对照重复",
+    "partialFailure": "{{count}} 行未能翻译，已保留原文",
+    "noResponse": "翻译服务无响应，文档未改动"
   }
 }

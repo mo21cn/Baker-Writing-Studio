@@ -74,6 +74,7 @@ xattr -cr "/Applications/Baker Writing Studio.app"
 - **公众号复制**：CSS 内联、HTML 消毒、公式 SVG 保护、外链图片尝试内嵌为 data URL
 - **桌面端**：Tauri 原生窗口，URL 导入走 HTTP 插件，无浏览器 CORS 限制；本地图片通过 asset 协议预览
 - **导出长图**：一键将当前预览渲染结果导出为 PNG
+- **全局翻译**：Preview 页眉「译成英文 / 译成中文」一键翻译整篇；自动识别文档语言，代码块、公式、链接与表格结构原样保留；「对照」文档自动去重；翻译后可一键「还原原文」
 - **布局**：顶部工具栏、左侧文档边栏与各面板标题栏固定，仅编辑区 / 预览正文滚动
 
 ### 三个 Web 工具（顶部 Tab 切换）
@@ -85,6 +86,19 @@ xattr -cr "/Applications/Baker Writing Studio.app"
 | **Formula → LaTeX / Word** | `Formula` Tab | 识别 LaTeX / 图片公式；输出可粘贴的 LaTeX 源码，以及含 **OMML 原生嵌入公式** 的 Word `.docx`（可在 Microsoft Word 中继续编辑） |
 
 工具页面与主编辑器共享文档库：WeChat → MD 转换结果可直接落库；Table / Formula 工具的输出可一键复制或导出文件。
+
+### 全局翻译
+
+| 能力 | 说明 |
+|------|------|
+| 入口 | Preview 页眉「译成英文 / 译成中文」，目标语言由文档主语言推导（判定时先剔除代码） |
+| 结构保护 | 代码块整块跳过；行内代码、`$...$` 公式、链接 / 图片地址、HTML 标签以占位符保护，译文回填后原样还原 |
+| 对照文档 | 中英逐句对照时自动去重：等价译文保留原文手写版本、删掉重复的源语言行；短注（不完整译文）丢弃，改译完整原句 |
+| 进度与取消 | 翻译中显示 `done/total`，可随时取消；取消后文档保持不变 |
+| 还原 | 完成后按钮变为「还原原文」，一键恢复；若已手动编辑则不再提供，避免覆盖新内容 |
+| 引擎 | 公共 Google 翻译端点，无需 API Key；单行失败保留原文并在状态栏提示，全篇失败则不改动文档 |
+
+翻译实现位于 `src/core/translate/`：`markdownSegments.ts`（分段与占位符保护）、`googleTranslator.ts`（请求、重试、缓存）、`translateMarkdown.ts`（编排与回填），配套 `translateMarkdown.test.ts` 单测。
 
 ---
 
@@ -382,3 +396,4 @@ npm run preview  # 本地预览 dist
 - 无云同步与用户账号体系；图片与草稿仅存本机
 - macOS 桌面版为 ad-hoc 签名、未公证；Windows 预构建安装包见 [Releases](https://github.com/mo21cn/Read2MD-Studio/releases)
 - 部分公众号文章导入可能触发环境验证，与网络环境有关
+- **全局翻译依赖公共翻译端点**：无需 API Key，但长文批量翻译受端点限速影响；失败行保留原文并提示

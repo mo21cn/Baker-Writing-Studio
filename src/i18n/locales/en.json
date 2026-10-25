@@ -144,6 +144,15 @@
     "languageSwitchHint": "Click to translate the current Markdown into the target language",
     "toolbarGroupLabel": "Translate document",
     "toZhTitle": "Translate to Chinese",
-    "toEnTitle": "翻译为英文"
+    "toEnTitle": "翻译为英文",
+    "progress": "Translating {{done}}/{{total}}",
+    "cancel": "Cancel",
+    "revert": "Restore original",
+    "revertHint": "Put the document back to its state before translation",
+    "reverted": "Original text restored",
+    "cancelled": "Translation cancelled",
+    "successWithDropped": "Translation complete, {{count}} duplicate 对照 lines removed",
+    "partialFailure": "{{count}} lines could not be translated and were kept as-is",
+    "noResponse": "Translation service did not respond; document left unchanged"
   }
 }

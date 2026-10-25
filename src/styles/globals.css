@@ -1064,6 +1064,25 @@ body.is-resizing {
   color: var(--baker-danger);
 }
 
+/* Sits next to the progress label while a translation is in flight;
+   deliberately quieter than the primary buttons. */
+.preview-translate-cancel {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--baker-border-strong);
+  border-radius: var(--baker-radius-sm);
+  background: transparent;
+  color: var(--baker-text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  transition: color 160ms ease, border-color 160ms ease;
+}
+
+.preview-translate-cancel:hover {
+  border-color: var(--baker-accent);
+  color: var(--baker-text);
+}
+
 .preview-ai-button {
   display: inline-flex;
   align-items: center;
