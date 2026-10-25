@@ -81,20 +81,20 @@ let failed = 0;
 for (const check of checks) {
   const ok = check.predicate();
   if (ok) {
-    // eslint-disable-next-line no-console
+     
     console.log(`PASS  ${check.name}`);
   } else {
     failed += 1;
-    // eslint-disable-next-line no-console
+     
     console.log(`FAIL  ${check.name}: ${check.detail}`);
   }
 }
 
 if (failed > 0) {
-  // eslint-disable-next-line no-console
+   
   console.error(`\n${failed} of ${checks.length} wechat checks failed.`);
   process.exit(1);
 }
 
-// eslint-disable-next-line no-console
+ 
 console.log(`\nAll ${checks.length} wechat checks passed.`);

@@ -30,26 +30,26 @@ function runChecks(checks: Check[]): void {
   for (const check of checks) {
     const ok = compareLines(check.expected, check.actual);
     if (ok) {
-      // eslint-disable-next-line no-console
+       
       console.log(`PASS  ${check.name}`);
     } else {
       failed += 1;
-      // eslint-disable-next-line no-console
+       
       console.log(`FAIL  ${check.name}`);
-      // eslint-disable-next-line no-console
+       
       console.log(`  expected: ${check.expected}`);
-      // eslint-disable-next-line no-console
+       
       console.log(`  actual:   ${check.actual}`);
     }
   }
 
   if (failed > 0) {
-    // eslint-disable-next-line no-console
+     
     console.error(`\n${failed} of ${checks.length} table checks failed.`);
     process.exit(1);
   }
 
-  // eslint-disable-next-line no-console
+   
   console.log(`\nAll ${checks.length} table checks passed.`);
 }
 

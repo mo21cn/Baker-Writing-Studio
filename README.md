@@ -353,6 +353,9 @@ npm run preview  # 本地预览 dist
 | `npm run preview` | 预览生产构建 |
 | `npm run tauri:dev` | Tauri 开发模式（原生窗口） |
 | `npm run tauri:build` | 构建桌面安装包（macOS：dmg；Windows：exe） |
+| `npm test` | 运行单元测试（Vitest） |
+| `npm run lint` | ESLint 检查 |
+| `npm run version:sync` | 把 `package.json` 的版本同步到 Tauri 与 Cargo 清单 |
 
 ---
 

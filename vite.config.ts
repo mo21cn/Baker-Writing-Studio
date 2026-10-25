@@ -1,5 +1,12 @@
+import { readFileSync } from "node:fs";
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
+
+const packageVersion = (
+  JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")) as {
+    version: string;
+  }
+).version;
 
 function importProxyPlugin(): Plugin {
   return {
@@ -164,6 +171,10 @@ export default defineConfig({
   plugins: [react(), importProxyPlugin()],
   base: "./",
   define: {
-    PACKAGE_VERSION: JSON.stringify("3.2.1"),
+    // mathjax-full probes a global `PACKAGE_VERSION` in components/version.js;
+    // without it, the CJS build falls back to eval('require') and the app dies
+    // with "require is not defined". Bind it to the real version so it stays
+    // in sync with package.json instead of a hand-written literal.
+    PACKAGE_VERSION: JSON.stringify(packageVersion),
   },
 });
