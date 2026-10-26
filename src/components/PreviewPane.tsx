@@ -14,6 +14,7 @@ import {
   type TranslateTarget,
 } from "../core/translate/translateMarkdown";
 import { useEditorStore } from "../store/editorStore";
+import { PaneHeader } from "./PaneHeader";
 import { ThemePanel } from "./ThemePanel";
 import { ThemeSelector } from "./ThemeSelector";
 
@@ -223,55 +224,67 @@ export function PreviewPane({ rawHtml, theme, themeId, onThemeChange }: PreviewP
 
   return (
     <section className="pane preview-pane" aria-label={t("common.preview")}>
-      <div className="pane-header">
-        <span>{t("common.preview")}</span>
-        <div className="preview-header-actions">
-          {canRevert ? (
+      <PaneHeader
+        title={t("common.preview")}
+        actions={
+          <>
+            {canRevert ? (
+              <button
+                type="button"
+                className="preview-translate-md"
+                onClick={handleRevert}
+                title={t("translate.revertHint")}
+              >
+                {t("translate.revert")}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="preview-translate-md"
+                onClick={() => void handleTranslate()}
+                disabled={translating || !markdown}
+                data-status={translating ? "translating" : "idle"}
+                title={t("translate.buttonHint")}
+              >
+                {translateLabel()}
+              </button>
+            )}
+            {translating && (
+              <button type="button" className="preview-translate-cancel" onClick={handleCancel}>
+                {t("translate.cancel")}
+              </button>
+            )}
             <button
               type="button"
-              className="preview-translate-md"
-              onClick={handleRevert}
-              title={t("translate.revertHint")}
+              className="preview-export-md"
+              onClick={handleExportMarkdown}
+              disabled={!markdown}
+              data-status={exportStatus}
+              title={t("common.exportMarkdown")}
             >
-              {t("translate.revert")}
+              {exportStatus === "exported"
+                ? t("common.exported")
+                : exportStatus === "failed"
+                  ? t("common.exportFailed")
+                  : t("common.exportMd")}
             </button>
-          ) : (
+            <span className="pane-theme">
+              主题
+              <ThemeSelector themeId={themeId} onThemeChange={onThemeChange} />
+            </span>
             <button
               type="button"
-              className="preview-translate-md"
-              onClick={() => void handleTranslate()}
-              disabled={translating || !markdown}
-              data-status={translating ? "translating" : "idle"}
-              title={t("translate.buttonHint")}
+              className="theme-panel-toggle"
+              aria-pressed={isThemePanelOpen}
+              onClick={toggleThemePanel}
+              title="主题配置"
+              aria-label="主题配置"
             >
-              {translateLabel()}
+              ⚙
             </button>
-          )}
-          {translating && (
-            <button type="button" className="preview-translate-cancel" onClick={handleCancel}>
-              {t("translate.cancel")}
-            </button>
-          )}
-          <button
-            type="button"
-            className="preview-export-md"
-            onClick={handleExportMarkdown}
-            disabled={!markdown}
-            data-status={exportStatus}
-            title={t("common.exportMarkdown")}
-          >
-            {exportStatus === "exported"
-              ? t("common.exported")
-              : exportStatus === "failed"
-                ? t("common.exportFailed")
-                : t("common.exportMd")}
-          </button>
-          <ThemeSelector themeId={themeId} onThemeChange={onThemeChange} />
-          <button type="button" className="theme-panel-toggle" onClick={toggleThemePanel}>
-            {isThemePanelOpen ? t("preview.collapseTheme") : t("preview.expandTheme")}
-          </button>
-        </div>
-      </div>
+          </>
+        }
+      />
       <div className="preview-layout">
         <div className="preview-scroll">
           <style>{themed.css}</style>

@@ -4,6 +4,7 @@ import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import { EditorView } from "@codemirror/view";
 import { editorImageExtension } from "./editorImageExtension";
+import { PaneHeader } from "./PaneHeader";
 import { useEditorStore } from "../store/editorStore";
 
 const EMPTY_ASSET_FILES: string[] = [];
@@ -41,9 +42,7 @@ export function EditorPane({ markdownValue, onMarkdownChange }: EditorPaneProps)
 
   return (
     <section className="pane editor-pane" aria-label={t("common.markdown")}>
-      <div className="pane-header">
-        <span>{t("common.markdown")}</span>
-      </div>
+      <PaneHeader title={t("common.markdown")} />
       <div className="pane-body">
         <CodeMirror
           key={activeDocId ?? "no-doc"}

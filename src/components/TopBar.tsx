@@ -1,41 +1,46 @@
-﻿import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BrandLogo, BrandWordmark } from "./BrandLogo";
+import { BrandLogo, hasCustomBrandLogo, writeBrandLogo } from "./BrandLogo";
+import type { AppView } from "./ActivityRail";
 import { copyHtml } from "../core/copy/copyHtml";
 import { exportLongImage } from "../core/export/exportLongImage";
-import { buildWechatOutput } from "../core/platform/wechatAdapter";
 import { ensureMathJax } from "../core/markdown/mathToSvg";
 import { renderMarkdown } from "../core/markdown/renderMarkdown";
+import { buildWechatOutput } from "../core/platform/wechatAdapter";
 import { getActiveTheme } from "../core/theme/themes";
 import { useEditorStore } from "../store/editorStore";
 
-interface ToolbarProps {
+const VIEW_LABELS: Record<AppView, string> = {
+  editor: "编辑器",
+  wechat: "WeChat → Markdown",
+  table: "Table Converter",
+  formula: "Formula → LaTeX",
+};
+
+interface TopBarProps {
   markdownValue: string;
+  view: AppView;
 }
 
 /**
- * The toolbar carries brand, status, long-image export, and the
- * copy-to-WeChat action.
- *
- * There is deliberately no language toggle here. The original
- * Read2MD Studio had a `中文 / English` pill that doubled as a UI
- * locale switch and a Markdown-translation trigger; Baker Writing
- * Studio is Chinese-only in the chrome, and Markdown translation is
- * its own explicit button in the Preview pane header.
+ * One 48px bar: brand, where you are, what you are editing, and the two
+ * global actions. Transient state (saved / translating / copied) lives
+ * in the status bar instead.
  */
-export function Toolbar({ markdownValue }: ToolbarProps) {
+export function TopBar({ markdownValue, view }: TopBarProps) {
   const { t } = useTranslation();
+  const documents = useEditorStore((state) => state.documents);
   const activeDocId = useEditorStore((state) => state.activeDocId);
   const themeId = useEditorStore((state) => state.themeId);
   const customThemeTokens = useEditorStore((state) => state.customThemeTokens);
   const customThemeName = useEditorStore((state) => state.customThemeName);
   const copyStatus = useEditorStore((state) => state.copyStatus);
-  const statusMessage = useEditorStore((state) => state.statusMessage);
-  const warnings = useEditorStore((state) => state.warnings);
   const setCopyStatus = useEditorStore((state) => state.setCopyStatus);
   const setWarnings = useEditorStore((state) => state.setWarnings);
 
   const [exportStatus, setExportStatus] = useState<"idle" | "exporting">("idle");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [customLogo, setCustomLogo] = useState(hasCustomBrandLogo);
   const [copyDialog, setCopyDialog] = useState<{
     title: string;
     message: string;
@@ -43,19 +48,66 @@ export function Toolbar({ markdownValue }: ToolbarProps) {
     tone: "success" | "error";
   } | null>(null);
 
-  const handleExportLongImage = async () => {
-    if (!markdownValue.trim()) {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const activeDoc = documents.find((doc) => doc.id === activeDocId);
+  const docTitle = activeDoc?.title ?? "未命名文档";
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setMenuOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
+
+  const handleLogoFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setCopyStatus("error", "Logo 需要是图片文件");
       return;
     }
+    if (file.size > 400 * 1024) {
+      setCopyStatus("error", "Logo 建议小于 400 KB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        writeBrandLogo(reader.result);
+        setCustomLogo(true);
+        setMenuOpen(false);
+        setCopyStatus("success", "Logo 已更新");
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
-    // MathJax loads asynchronously; a copy/export before it is ready
-    // would emit raw TeX instead of SVG.
-    await ensureMathJax();
+  const resetLogo = () => {
+    writeBrandLogo(null);
+    setCustomLogo(false);
+    setMenuOpen(false);
+    setCopyStatus("success", "已恢复默认 Logo");
+  };
+
+  const handleExportLongImage = async () => {
+    if (!markdownValue.trim()) return;
+
     setExportStatus("exporting");
     setCopyStatus("copying", t("toolbar.generatingLongImage"));
 
     try {
-      const activeDoc = useEditorStore.getState().documents.find((doc) => doc.id === activeDocId);
       const result = await exportLongImage({
         markdown: markdownValue,
         theme: getActiveTheme(themeId, customThemeTokens, customThemeName),
@@ -67,23 +119,13 @@ export function Toolbar({ markdownValue }: ToolbarProps) {
       const message = result.ok ? t("export.success") : result.message || t("export.failed");
       setCopyStatus(result.ok ? "success" : "error", message);
       if (!result.ok) {
-        setCopyDialog({
-          title: t("toolbar.exportFailed"),
-          message,
-          warnings: result.warnings,
-          tone: "error",
-        });
+        setCopyDialog({ title: t("toolbar.exportFailed"), message, warnings: result.warnings, tone: "error" });
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : t("export.failed");
       setWarnings([message]);
       setCopyStatus("error", message);
-      setCopyDialog({
-        title: t("toolbar.exportFailed"),
-        message,
-        warnings: [message],
-        tone: "error",
-      });
+      setCopyDialog({ title: t("toolbar.exportFailed"), message, warnings: [message], tone: "error" });
     } finally {
       setExportStatus("idle");
     }
@@ -94,9 +136,7 @@ export function Toolbar({ markdownValue }: ToolbarProps) {
 
     try {
       await ensureMathJax();
-      const rendered = renderMarkdown({
-        markdown: markdownValue,
-      });
+      const rendered = renderMarkdown({ markdown: markdownValue });
       const output = await buildWechatOutput({
         rawHtml: rendered.rawHtml,
         theme: getActiveTheme(themeId, customThemeTokens, customThemeName),
@@ -117,52 +157,59 @@ export function Toolbar({ markdownValue }: ToolbarProps) {
 
       setWarnings(output.warnings);
       setCopyStatus(result.ok ? "success" : "error", resultMessage);
-      setCopyDialog({
-        title: resultTitle,
-        message: resultMessage,
-        warnings: output.warnings,
-        tone: result.ok ? "success" : "error",
-      });
+      setCopyDialog({ title: resultTitle, message: resultMessage, warnings: output.warnings, tone: result.ok ? "success" : "error" });
     } catch (error) {
       const message = error instanceof Error ? error.message : t("export.copyPermissionFailed");
       setWarnings([message]);
       setCopyStatus("error", message);
-      setCopyDialog({
-        title: t("toolbar.copyFailed"),
-        message,
-        warnings: [message],
-        tone: "error",
-      });
+      setCopyDialog({ title: t("toolbar.copyFailed"), message, warnings: [message], tone: "error" });
     }
   };
 
   return (
-    <header className="toolbar toolbar-app">
-      <div className="toolbar-brand">
-        <div className="brand-logo-wrap" aria-hidden>
-          <BrandLogo />
-        </div>
-        <div className="toolbar-brand-text">
-          <BrandWordmark />
-          <span className="toolbar-subtitle">{t("toolbar.subtitle")}</span>
-        </div>
-      </div>
-
-      <div className="toolbar-center">
-        {!copyDialog && statusMessage && (
-          <span className={`toolbar-status status-${copyStatus}`} role="status">
-            {statusMessage}
-          </span>
-        )}
-        {!copyDialog && warnings.length > 0 && (
-          <span className="toolbar-warning">{warnings[0]}</span>
-        )}
-      </div>
-
-      <div className="toolbar-actions toolbar-actions-compact">
+    <header className="topbar">
+      <div className="brand-menu-wrap" ref={menuRef}>
         <button
           type="button"
-          className="toolbar-btn toolbar-btn-ghost toolbar-btn-export"
+          className="brand-button"
+          title="更换 Logo"
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          <BrandLogo />
+          <span className="brand-caret" aria-hidden>
+            ▾
+          </span>
+        </button>
+        {menuOpen && (
+          <div className="brand-menu" role="menu">
+            <button type="button" role="menuitem" onClick={() => fileRef.current?.click()}>
+              更换 Logo…
+            </button>
+            {customLogo && (
+              <button type="button" role="menuitem" onClick={resetLogo}>
+                恢复默认
+              </button>
+            )}
+          </div>
+        )}
+        <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleLogoFile} />
+      </div>
+
+      <span className="topbar-divider" aria-hidden />
+      <span className="topbar-view">{VIEW_LABELS[view]}</span>
+      <span className="topbar-doc" title={docTitle}>
+        {docTitle}
+      </span>
+      <span className="topbar-count">· {documents.length} 篇</span>
+
+      <span className="topbar-spacer" />
+
+      <div className="topbar-actions">
+        <button
+          type="button"
+          className="topbar-btn"
           title={t("toolbar.exportLongImage")}
           disabled={exportStatus === "exporting" || !markdownValue.trim()}
           onClick={() => void handleExportLongImage()}
@@ -170,9 +217,9 @@ export function Toolbar({ markdownValue }: ToolbarProps) {
           {exportStatus === "exporting" ? t("toolbar.exporting") : t("toolbar.exportLongImage")}
         </button>
         <button
-          className="toolbar-btn toolbar-btn-primary toolbar-btn-copy"
           type="button"
-          onClick={handleCopyWechat}
+          className="topbar-btn topbar-btn-primary"
+          onClick={() => void handleCopyWechat()}
           disabled={copyStatus === "copying"}
         >
           {copyStatus === "copying" ? t("toolbar.copying") : t("toolbar.copyWechat")}
