@@ -2,6 +2,7 @@
 import { useTranslation } from "react-i18next";
 import type { DocumentSource } from "../core/document/documentTypes";
 import { useEditorStore } from "../store/editorStore";
+import { DocTypeIcon } from "./DocTypeIcon";
 import { ImportDialog } from "./ImportDialog";
 
 interface DocumentListProps {
@@ -197,10 +198,16 @@ export function DocumentList({ collapsed, onToggleCollapse, width }: DocumentLis
                     </button>
                   </div>
                 ) : (
-                  <div
-                    className="document-list-item-row"
-                    ref={openMenuId === doc.id ? menuRef : undefined}
+                  <div
+                    className="document-list-item-row"
+                    ref={openMenuId === doc.id ? menuRef : undefined}
                   >
+                    <span
+                      className="doc-type-chip"
+                      title={doc.source === "latex" ? "LaTeX 文档" : doc.source === "table" ? "表格文档" : doc.source === "wechat" ? "公众号导入" : "Markdown 文档"}
+                    >
+                      <DocTypeIcon source={doc.source} />
+                    </span>
                     <button
                       type="button"
                       className={`document-list-item${

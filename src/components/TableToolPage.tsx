@@ -9,6 +9,7 @@ import {
   type TableModel,
 } from "../core/table/model";
 import { parseClipboardTable } from "../core/table/parser";
+import { looksLikeMarkdownTable, parseMarkdownTable } from "../core/table/markdownTable";
 import { serializeTable, type TableFormat } from "../core/table/serializer";
 import {
   TABLE_DRAFT_KEY,
@@ -16,6 +17,7 @@ import {
   readDraft,
   writeDraft,
 } from "../core/tools/drafts";
+import { useEditorStore } from "../store/editorStore";
 import { CanvasPane } from "./CanvasPane";
 import { WorkspaceSplit } from "./WorkspaceSplit";
 
@@ -59,7 +61,17 @@ interface TableToolPageProps {
 }
 
 export function TableToolPage(_props: TableToolPageProps = {}) {
-  const [model, setModel] = useState<TableModel>(() => {
+  const documents = useEditorStore((state) => state.documents);
+  const activeDocId = useEditorStore((state) => state.activeDocId);
+  const setStoreMarkdown = useEditorStore((state) => state.setMarkdown);
+  const createTypedDocument = useEditorStore((state) => state.createTypedDocument);
+  const activeTableDoc = documents.find(
+    (doc) => doc.id === activeDocId && doc.source === "table",
+  );
+
+  // A table-source document owns the grid; without one the page keeps
+  // its standalone draft.
+  const [draftModel, setDraftModel] = useState<TableModel>(() => {
     const draft = readDraft(TABLE_DRAFT_KEY, parseTableDraft);
     if (!draft) return createEmptyTable(3, 3);
     return {
@@ -68,17 +80,35 @@ export function TableToolPage(_props: TableToolPageProps = {}) {
       headerRow: draft.headerRow,
     };
   });
+  const model = useMemo(() => {
+    if (activeTableDoc && looksLikeMarkdownTable(activeTableDoc.markdown)) {
+      return parseMarkdownTable(activeTableDoc.markdown) ?? draftModel;
+    }
+    return draftModel;
+  }, [activeTableDoc, draftModel]);
+  const setModel = (next: TableModel | ((current: TableModel) => TableModel)) => {
+    const resolved = typeof next === "function" ? next(model) : next;
+    setDraftModel(resolved);
+    if (activeTableDoc) setStoreMarkdown(serializeTable(resolved, "markdown"));
+  };
   const [activeFormat, setActiveFormat] = useState<FormatTab>("markdown");
   const [importStatus, setImportStatus] = useState<string>("");
   const [exportStatus, setExportStatus] = useState<ExportStatus>("idle");
   const exportTimer = useRef<number | null>(null);
 
-  // Survives the idle unload of a tool page.
+  // Survives the idle unload of a tool page. Table-source documents
+  // autosave through the store instead.
   useEffect(() => {
+    if (activeTableDoc) return;
     writeDraft(TABLE_DRAFT_KEY, { rows: model.cells, headerRow: model.headerRow });
-  }, [model]);
+  }, [model, activeTableDoc]);
 
   const output = useMemo(() => serializeTable(model, activeFormat), [model, activeFormat]);
+
+  const handleSaveAsTableDocument = () => {
+    const markdown = serializeTable(model, "markdown");
+    createTypedDocument("table", markdown, "表格文档");
+  };
 
   const updateCell = (row: number, col: number, value: string) => {
     setModel((current) => setCell(current, row, col, value));
@@ -175,6 +205,9 @@ export function TableToolPage(_props: TableToolPageProps = {}) {
           }
         >
           <div className="tool-row">
+            <button type="button" className="tool-btn tool-btn-ghost" onClick={handleSaveAsTableDocument}>
+              保存为文档
+            </button>
             <button type="button" className="tool-btn tool-btn-ghost" onClick={handleReset}>
               清空
             </button>

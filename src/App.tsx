@@ -171,6 +171,15 @@ function App() {
     clearPendingView();
   }, [pendingView, clearPendingView]);
 
+  // The document owns the view: opening a LaTeX or table document brings
+  // its editor forward, a plain Markdown document returns to the editor.
+  const activeDocSource = documents.find((doc) => doc.id === activeDocId)?.source;
+  useEffect(() => {
+    if (activeDocSource === "latex") setView("latex");
+    else if (activeDocSource === "table") setView("table");
+    else setView("editor");
+  }, [activeDocSource]);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       window.localStorage.setItem(VIEW_STORAGE_KEY, view);

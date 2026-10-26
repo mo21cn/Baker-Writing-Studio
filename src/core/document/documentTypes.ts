@@ -2,7 +2,7 @@
 import { defaultCustomTokens, type ThemeTokenInput } from "../theme/themeTokens";
 import type { ThemeId } from "../theme/themes";
 
-export type DocumentSource = "blank" | "wechat" | "html" | "markdown";
+export type DocumentSource = "blank" | "wechat" | "html" | "markdown" | "latex" | "table";
 
 export interface StudioDocument {
   id: string;

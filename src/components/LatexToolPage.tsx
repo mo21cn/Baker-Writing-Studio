@@ -108,13 +108,15 @@ function downloadBlob(blob: Blob, filename: string) {
 }
 
 export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPageProps) {
-  const [latex, setLatex] = useState<string>(
+  // A latex-source document owns the editor content; without one the page
+  // keeps its standalone draft.
+  const [draftLatex, setDraftLatex] = useState<string>(
     () => readDraft(FORMULA_DRAFT_KEY, parseFormulaDraft)?.latex ?? initialLatex,
   );
   const [wrap, setWrap] = useState<FormulaWrap>(
     () => readDraft(FORMULA_DRAFT_KEY, parseFormulaDraft)?.wrap ?? "inline",
   );
-  const [mode, setMode] = useState<PageMode>(readMode);
+  const [preferredMode, setMode] = useState<PageMode>(readMode);
   // Remounts the history dropdown after a copy so it re-reads storage.
   const [historyVersion, setHistoryVersion] = useState(0);
   const texInputRef = useRef<HTMLInputElement | null>(null);
@@ -122,6 +124,20 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
   const [docxStatus, setDocxStatus] = useState<DocxStatus>("idle");
   const [mathReady, setMathReady] = useState(isMathJaxReady());
 
+  const documents = useEditorStore((state) => state.documents);
+  const activeDocId = useEditorStore((state) => state.activeDocId);
+  const setStoreMarkdown = useEditorStore((state) => state.setMarkdown);
+  const createTypedDocument = useEditorStore((state) => state.createTypedDocument);
+  const activeLatexDoc = documents.find(
+    (doc) => doc.id === activeDocId && doc.source === "latex",
+  );
+  // A latex-source document is always edited in document mode.
+  const mode: PageMode = activeLatexDoc ? "document" : preferredMode;
+  const latex = activeLatexDoc ? activeLatexDoc.markdown : draftLatex;
+  const setLatex = (value: string) => {
+    if (activeLatexDoc) setStoreMarkdown(value);
+    else setDraftLatex(value);
+  };
   const insertIntoDocument = useEditorStore((state) => state.insertIntoDocument);
   const requestEditorView = useEditorStore((state) => state.requestEditorView);
   const setCopyStatusStore = useEditorStore((state) => state.setCopyStatus);
@@ -130,10 +146,12 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
   const docxTimer = useRef<number | null>(null);
   const viewRef = useRef<EditorView | null>(null);
 
-  // Survives the idle unload of a tool page.
+  // Survives the idle unload of a tool page. Latex-source documents
+  // autosave through the store instead.
   useEffect(() => {
+    if (activeLatexDoc) return;
     writeDraft(FORMULA_DRAFT_KEY, { latex, wrap });
-  }, [latex, wrap]);
+  }, [latex, wrap, activeLatexDoc]);
 
   useEffect(() => {
     window.localStorage.setItem(MODE_KEY, mode);
@@ -192,7 +210,7 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
   const insertSnippet = (snippet: string) => {
     const view = viewRef.current;
     if (!view) {
-      setLatex((current) => current + snippet);
+      setLatex(latex + snippet);
       return;
     }
     const range = view.state.selection.main;
@@ -342,6 +360,13 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
     });
   };
 
+  const handleSaveAsDocument = () => {
+    if (!latex.trim()) return;
+    const heading = /\\section\*?\{([^}]*)\}/.exec(latex);
+    const title = heading?.[1] ?? (mode === "document" ? "LaTeX 文档" : "LaTeX 片段");
+    createTypedDocument("latex", latex, title);
+  };
+
   const handleExportDocx = async () => {
     if (docxTimer.current !== null) window.clearTimeout(docxTimer.current);
 
@@ -404,6 +429,15 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
                   文档
                 </button>
               </div>
+              <button
+                type="button"
+                className="pane-action-btn"
+                onClick={handleSaveAsDocument}
+                disabled={!latex.trim()}
+                title="把当前内容保存为独立文档"
+              >
+                保存为文档
+              </button>
               <LatexSymbolPanel onInsert={insertSnippet} />
               {mode === "fragment" && (
                 <LatexHistoryPanel

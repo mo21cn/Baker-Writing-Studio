@@ -1,4 +1,4 @@
-﻿import { create } from "zustand";
+import { create } from "zustand";
 import { computeInsertRange, takeEditorCaret } from "../core/editor/insertPosition";
 import {
   createBlankDocument,
@@ -100,6 +100,8 @@ interface EditorState {
   removeDocument: (id: string) => void;
   importUrlToNewDoc: (url: string) => Promise<{ ok: true } | { ok: false; message: string; verification?: boolean }>;
   importMarkdownToNewDoc: (content: string, filename: string) => Promise<{ ok: true } | { ok: false; message: string }>;
+  /** Creates a document that belongs to a tool page (LaTeX / table). */
+  createTypedDocument: (source: "latex" | "table", content: string, title: string) => void;
   relocalizeDocumentImagesIfNeeded: (id: string) => Promise<void>;
   registerAssetFile: (filename: string) => void;
   saveCurrentThemeAsPreset: (name: string) => void;
@@ -185,7 +187,12 @@ function isValidDocument(value: unknown): value is StudioDocument {
     isValidThemeId(record.themeId) &&
     isValidThemeTokens(record.customThemeTokens) &&
     typeof record.customThemeName === "string" &&
-    (record.source === "blank" || record.source === "wechat" || record.source === "html") &&
+    (record.source === "blank" ||
+      record.source === "wechat" ||
+      record.source === "html" ||
+      record.source === "markdown" ||
+      record.source === "latex" ||
+      record.source === "table") &&
     typeof record.createdAt === "string" &&
     typeof record.updatedAt === "string"
   );
@@ -808,6 +815,26 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     return { ok: true };
   },
 
+  createTypedDocument: (source, content, title) => {
+    const draft = createImportedDocument({
+      title: title.slice(0, 120) || (source === "latex" ? "LaTeX 文档" : "表格文档"),
+      markdown: content,
+      tokens: defaultCustomTokens,
+      themeName: "",
+      source,
+    });
+
+    const documents = [draft, ...get().documents];
+    persistDocuments(documents);
+    syncLegacyStorage(draft);
+
+    set({
+      documents,
+      activeDocId: draft.id,
+      ...documentToMirror(draft),
+      statusMessage: source === "latex" ? "已保存为 LaTeX 文档" : "已保存为表格文档",
+    });
+  },
   importMarkdownToNewDoc: async (content, filename) => {
     const headingMatch = /^\\s*#\\s+(.+?)\\s*$/m.exec(content);
     const fallback = filename.replace(/\\.(md|markdown|txt)$/i, "");

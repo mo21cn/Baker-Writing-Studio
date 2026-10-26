@@ -3846,3 +3846,30 @@ body.is-resizing {
   align-items: center;
   padding-right: 4px;
 }
+
+/* Per-document type chip in the list. */
+.doc-type-chip {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--baker-border-strong);
+  border-radius: 8px;
+  background: var(--baker-surface-muted);
+}
+
+.doc-type-chip svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--baker-text-muted);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.doc-type-chip svg.doc-type-icon-tool {
+  stroke: var(--baker-accent);
+}
