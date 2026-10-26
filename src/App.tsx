@@ -1,4 +1,13 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import {
+  lazy,
+  startTransition,
+  Suspense,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ActivityRail, type AppView } from "./components/ActivityRail";
 import { DocumentList } from "./components/DocumentList";
 import { EditorPane } from "./components/EditorPane";
@@ -134,7 +143,7 @@ function App() {
     void (async () => {
       try {
         const resolved = await resolveMarkdownAssetUrls(activeDocId, debouncedMarkdown);
-        if (!cancelled) setPreviewMarkdown(resolved);
+        if (!cancelled) startTransition(() => setPreviewMarkdown(resolved));
       } catch {
         if (!cancelled) setPreviewMarkdown(debouncedMarkdown);
       }
@@ -249,9 +258,15 @@ function App() {
     return () => window.clearTimeout(timer);
   }, [mathReady, mathGraceOver]);
 
+  // Parsing a 10 KB document costs 27–74 ms and produces ~218 KB of HTML,
+  // which used to land synchronously in the typing path (measured spikes of
+  // 85 ms and 174 ms inside a single dispatch). A deferred value lets React
+  // keep the editor responsive and run the preview render afterwards.
+  const deferredMarkdown = useDeferredValue(previewMarkdown);
+
   const rendered = useMemo(
-    () => (mathReady || mathGraceOver ? renderMarkdown({ markdown: previewMarkdown }) : null),
-    [previewMarkdown, mathReady, mathGraceOver],
+    () => (mathReady || mathGraceOver ? renderMarkdown({ markdown: deferredMarkdown }) : null),
+    [deferredMarkdown, mathReady, mathGraceOver],
   );
 
   const activeTheme = getActiveTheme(themeId, customThemeTokens, customThemeName);

@@ -3607,3 +3607,27 @@ body.is-resizing {
   border-left-color: #b9c6d8;
 
 }
+
+/* Visual break between character formatting and block conversion. */
+.selection-tools-divider {
+  margin-left: 4px;
+  padding-left: 8px;
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.18);
+}
+
+/* Slash-command popup, styled to match the insert menu. */
+.cm-tooltip.cm-tooltip-autocomplete > ul {
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] {
+  background: #1f1f24;
+  color: #fff;
+}
+
+.cm-completionDetail {
+  margin-left: 8px;
+  font-style: normal;
+  color: #8a8a92;
+}

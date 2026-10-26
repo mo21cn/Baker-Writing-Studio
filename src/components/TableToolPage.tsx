@@ -1,4 +1,4 @@
-﻿import { useMemo, useRef, useState } from "react";
+﻿import { useMemo, useRef, useState, useEffect } from "react";
 import {
   addColumn,
   addRow,
@@ -10,6 +10,12 @@ import {
 } from "../core/table/model";
 import { parseClipboardTable } from "../core/table/parser";
 import { serializeTable, type TableFormat } from "../core/table/serializer";
+import {
+  TABLE_DRAFT_KEY,
+  parseTableDraft,
+  readDraft,
+  writeDraft,
+} from "../core/tools/drafts";
 import { CanvasPane } from "./CanvasPane";
 import { WorkspaceSplit } from "./WorkspaceSplit";
 
@@ -53,11 +59,24 @@ interface TableToolPageProps {
 }
 
 export function TableToolPage(_props: TableToolPageProps = {}) {
-  const [model, setModel] = useState<TableModel>(() => createEmptyTable(3, 3));
+  const [model, setModel] = useState<TableModel>(() => {
+    const draft = readDraft(TABLE_DRAFT_KEY, parseTableDraft);
+    if (!draft) return createEmptyTable(3, 3);
+    return {
+      cells: draft.rows,
+      cols: draft.rows[0]?.length ?? 3,
+      headerRow: draft.headerRow,
+    };
+  });
   const [activeFormat, setActiveFormat] = useState<FormatTab>("markdown");
   const [importStatus, setImportStatus] = useState<string>("");
   const [exportStatus, setExportStatus] = useState<ExportStatus>("idle");
   const exportTimer = useRef<number | null>(null);
+
+  // Survives the idle unload of a tool page.
+  useEffect(() => {
+    writeDraft(TABLE_DRAFT_KEY, { rows: model.cells, headerRow: model.headerRow });
+  }, [model]);
 
   const output = useMemo(() => serializeTable(model, activeFormat), [model, activeFormat]);
 

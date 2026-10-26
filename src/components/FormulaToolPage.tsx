@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Document, HeadingLevel, ImageRun, Packer, Paragraph, Run, TextRun } from "docx";
 import { Math as DocxMath, latexToMath } from "docx/math";
+import {
+  FORMULA_DRAFT_KEY,
+  parseFormulaDraft,
+  readDraft,
+  writeDraft,
+} from "../core/tools/drafts";
 import { serializeFormula } from "../core/formula/serializer";
 import type { FormulaWrap } from "../core/formula/model";
 import { texToSvg } from "../core/markdown/mathToSvg";
@@ -104,13 +110,22 @@ async function svgToPngBlob(svg: string, scale = 2): Promise<{ blob: Blob; width
 }
 
 export function FormulaToolPage({ initialLatex = "\\frac{a}{b}" }: FormulaToolPageProps) {
-  const [latex, setLatex] = useState<string>(initialLatex);
-  const [wrap, setWrap] = useState<FormulaWrap>("inline");
+  const [latex, setLatex] = useState<string>(
+    () => readDraft(FORMULA_DRAFT_KEY, parseFormulaDraft)?.latex ?? initialLatex,
+  );
+  const [wrap, setWrap] = useState<FormulaWrap>(
+    () => readDraft(FORMULA_DRAFT_KEY, parseFormulaDraft)?.wrap ?? "inline",
+  );
   const [copyStatus, setCopyStatus] = useState<CopyStatus>("idle");
   const [docxStatus, setDocxStatus] = useState<DocxStatus>("idle");
   const [previewError, setPreviewError] = useState<string | null>(null);
   const copyTimer = useRef<number | null>(null);
   const docxTimer = useRef<number | null>(null);
+
+  // Survives the idle unload of a tool page.
+  useEffect(() => {
+    writeDraft(FORMULA_DRAFT_KEY, { latex, wrap });
+  }, [latex, wrap]);
 
   const output = useMemo(() => serializeFormula({ latex }, wrap), [latex, wrap]);
   const previewSvg = useMemo(() => {

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
@@ -12,6 +12,7 @@ import {
 import { blockPreviewWidgets } from "./editorBlockWidgets";
 import { inlinePreviewWidgets } from "./editorInlineWidgets";
 import { InsertMenu } from "./InsertMenu";
+import { PICK_IMAGE_EVENT, slashCommands } from "./editorSlashCommands";
 import { PaneHeader } from "./PaneHeader";
 import { SelectionBubble } from "./SelectionBubble";
 import { bubblePosition, type BubblePosition } from "./editorSelectionTools";
@@ -47,6 +48,7 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
   const [bubble, setBubble] = useState<BubblePosition | null>(null);
   const [viewVersion, setViewVersion] = useState(0);
 
+  const paneRef = useRef<HTMLElement | null>(null);
   const viewRef = useRef<EditorViewType | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -111,6 +113,7 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
         blur: () => setBubble(null),
         scroll: () => setBubble(null),
       }),
+      slashCommands,
       editorImageExtension(imageOptions),
     ],
     [imageOptions],
@@ -125,6 +128,16 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
     }),
     [lineNumbers],
   );
+
+  // A slash command cannot open a file dialog on its own: the gesture
+  // must come from the host pane.
+  useEffect(() => {
+    const section = paneRef.current;
+    if (!section) return;
+    const openPicker = () => fileInputRef.current?.click();
+    section.addEventListener(PICK_IMAGE_EVENT, openPicker);
+    return () => section.removeEventListener(PICK_IMAGE_EVENT, openPicker);
+  }, []);
 
   const toggleLineNumbers = () => {
     setLineNumbers((current) => {
@@ -163,7 +176,7 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
   };
 
   return (
-    <section className="pane editor-pane" aria-label={t("common.markdown")}>
+    <section className="pane editor-pane" aria-label={t("common.markdown")} ref={paneRef}>
       <PaneHeader
         title={t("common.markdown")}
         actions={
