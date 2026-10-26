@@ -10,6 +10,7 @@ import { serializeFormula } from "../core/formula/serializer";
 import type { FormulaWrap } from "../core/formula/model";
 import { ensureMathJax, isMathJaxReady, texToSvg } from "../core/markdown/mathToSvg";
 import { parseLatex } from "../core/latex/parseLatex";
+import { blocksToMarkdown } from "../core/latex/toMarkdown";
 import { LATEX_SAMPLE } from "../core/latex/samples";
 import { renderBlocks } from "../core/latex/render";
 import { blocksToDocxParagraphs } from "../core/latex/docx";
@@ -313,7 +314,10 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
 
   /** Sends the current fragment to the document and shows the editor. */
   const handleInsertIntoDocument = () => {
-    const snippet = mode === "document" ? latex.trim() : output.wrapped.trim();
+    // Raw .tex syntax (\section, \begin{itemize}, \[...\]) cannot be
+    // rendered by the Markdown pipeline, so documents are converted first.
+    const snippet =
+      mode === "document" ? blocksToMarkdown(parseLatex(latex).blocks) : output.wrapped.trim();
     if (!snippet) return;
     insertIntoDocument(snippet);
     requestEditorView();
