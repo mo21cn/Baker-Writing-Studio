@@ -1,12 +1,22 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import { EditorView } from "@codemirror/view";
-import { editorImageExtension } from "./editorImageExtension";
+import type { EditorView as EditorViewType } from "@codemirror/view";
+import {
+  editorImageExtension,
+  insertImageFiles,
+  type ImageExtensionOptions,
+} from "./editorImageExtension";
 import { blockPreviewWidgets } from "./editorBlockWidgets";
 import { inlinePreviewWidgets } from "./editorInlineWidgets";
+import { InsertMenu } from "./InsertMenu";
 import { PaneHeader } from "./PaneHeader";
+import { SelectionBubble } from "./SelectionBubble";
+import { bubblePosition, type BubblePosition } from "./editorSelectionTools";
+import { applyInsert } from "../core/editor/applyInsert";
+import type { InsertKind } from "../core/editor/insertSnippets";
 import { useEditorStore } from "../store/editorStore";
 
 const EMPTY_ASSET_FILES: string[] = [];
@@ -34,6 +44,23 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
   const registerAssetFile = useEditorStore((state) => state.registerAssetFile);
   const setCopyStatus = useEditorStore((state) => state.setCopyStatus);
   const [lineNumbers, setLineNumbers] = useState(readLineNumbers);
+  const [bubble, setBubble] = useState<BubblePosition | null>(null);
+  const [viewVersion, setViewVersion] = useState(0);
+
+  const viewRef = useRef<EditorViewType | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const imageOptions = useMemo<ImageExtensionOptions>(
+    () => ({
+      docId: activeDocId,
+      markdown: markdownValue,
+      assetFiles,
+      onImageInserted: registerAssetFile,
+      onMarkdownChange,
+      onError: (message) => setCopyStatus("error", message),
+    }),
+    [activeDocId, markdownValue, assetFiles, registerAssetFile, onMarkdownChange, setCopyStatus],
+  );
 
   const extensions = useMemo(
     () => [
@@ -41,16 +68,18 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
       EditorView.lineWrapping,
       inlinePreviewWidgets,
       blockPreviewWidgets,
-      editorImageExtension({
-        docId: activeDocId,
-        markdown: markdownValue,
-        assetFiles,
-        onImageInserted: registerAssetFile,
-        onMarkdownChange: onMarkdownChange,
-        onError: (message) => setCopyStatus("error", message),
+      // Keeps the floating row glued to the current selection.
+      EditorView.updateListener.of((update) => {
+        if (!update.selectionSet && !update.docChanged && !update.focusChanged) return;
+        setBubble(bubblePosition(update.view));
       }),
+      EditorView.domEventHandlers({
+        blur: () => setBubble(null),
+        scroll: () => setBubble(null),
+      }),
+      editorImageExtension(imageOptions),
     ],
-    [activeDocId, markdownValue, assetFiles, onMarkdownChange, registerAssetFile, setCopyStatus],
+    [imageOptions],
   );
 
   const toggleLineNumbers = () => {
@@ -61,23 +90,67 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
     });
   };
 
+  const handleInsert = (kind: InsertKind) => {
+    const view = viewRef.current;
+    if (!view) return;
+
+    if (kind === "image") {
+      fileInputRef.current?.click();
+      return;
+    }
+
+    applyInsert(view, kind);
+    onMarkdownChange(view.state.doc.toString());
+    setBubble(bubblePosition(view));
+    view.focus();
+  };
+
+  const handlePickImages = async (files: FileList | null) => {
+    const view = viewRef.current;
+    if (!view || !files || files.length === 0) return;
+
+    try {
+      await insertImageFiles(view, Array.from(files), imageOptions);
+      onMarkdownChange(view.state.doc.toString());
+      view.focus();
+    } catch (error) {
+      setCopyStatus("error", error instanceof Error ? error.message : "图片插入失败");
+    }
+  };
+
   return (
     <section className="pane editor-pane" aria-label={t("common.markdown")}>
       <PaneHeader
         title={t("common.markdown")}
         actions={
-          <button
-            type="button"
-            className="pane-action-btn"
-            aria-pressed={lineNumbers}
-            title="显示或隐藏行号"
-            onClick={toggleLineNumbers}
-          >
-            行号
-          </button>
+          <>
+            <InsertMenu onInsert={handleInsert} />
+            <button
+              type="button"
+              className="pane-action-btn"
+              aria-pressed={lineNumbers}
+              title="显示或隐藏行号"
+              onClick={toggleLineNumbers}
+            >
+              行号
+            </button>
+          </>
         }
       />
       <div className="pane-body">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          aria-hidden="true"
+          tabIndex={-1}
+          onChange={(event) => {
+            void handlePickImages(event.target.files);
+            event.target.value = "";
+          }}
+        />
         <CodeMirror
           // Remount only when a formula document gains the engine: the
           // widgets resolve their SVG at construction time. Documents
@@ -86,6 +159,10 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
           value={markdownValue}
           height="100%"
           extensions={extensions}
+          onCreateEditor={(view) => {
+            viewRef.current = view;
+            setViewVersion((value) => value + 1);
+          }}
           basicSetup={{
             lineNumbers,
             foldGutter: false,
@@ -96,6 +173,15 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
           className="markdown-editor"
         />
       </div>
+
+      <SelectionBubble
+        position={bubble}
+        view={viewVersion > 0 ? viewRef.current : null}
+        onAfterChange={() => {
+          const view = viewRef.current;
+          if (view) onMarkdownChange(view.state.doc.toString());
+        }}
+      />
     </section>
   );
 }

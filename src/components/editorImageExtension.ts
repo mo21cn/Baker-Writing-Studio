@@ -2,7 +2,7 @@ import { Prec } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { nextAssetImageIndex, saveUserImage } from "../core/assets/saveUserImage";
 
-interface ImageExtensionOptions {
+export interface ImageExtensionOptions {
   docId: string | null;
   markdown: string;
   assetFiles: string[];
@@ -56,7 +56,11 @@ function buildImageMarkdown(assetUrl: string, alt = "image"): string {
   return `![${alt}](${assetUrl})`;
 }
 
-async function insertImages(
+/**
+ * Insert image files saved by the user at the caret. Shared by the paste
+ * and drop handlers and by the insert menu's picker.
+ */
+export async function insertImageFiles(
   view: EditorView,
   files: File[],
   options: ImageExtensionOptions,
@@ -100,7 +104,7 @@ export function editorImageExtension(options: ImageExtensionOptions) {
       }
 
       event.preventDefault();
-      void insertImages(view, files, options).catch((error) => {
+      void insertImageFiles(view, files, options).catch((error) => {
         options.onError(error instanceof Error ? error.message : "图片粘贴失败");
       });
       return true;
@@ -119,7 +123,7 @@ export function editorImageExtension(options: ImageExtensionOptions) {
       event.preventDefault();
       const coords = { x: event.clientX, y: event.clientY };
       const pos = view.posAtCoords(coords) ?? view.state.selection.main.head;
-      void insertImages(view, files, options, pos).catch((error) => {
+      void insertImageFiles(view, files, options, pos).catch((error) => {
         options.onError(error instanceof Error ? error.message : "图片拖放失败");
       });
       return true;
