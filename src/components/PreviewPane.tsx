@@ -5,7 +5,7 @@ import {
   renderMermaidBlocksWithRetry,
 } from "../core/markdown/renderMermaid";
 import { applyThemeHtml } from "../core/theme/applyTheme";
-import type { ThemeDefinition, ThemeId } from "../core/theme/themes";
+import type { ThemeDefinition } from "../core/theme/themes";
 import {
   detectDominantLanguage,
   isAbortError,
@@ -15,13 +15,10 @@ import {
 } from "../core/translate/translateMarkdown";
 import { useEditorStore } from "../store/editorStore";
 import { PaneHeader } from "./PaneHeader";
-import { ThemeSelector } from "./ThemeSelector";
 
 interface PreviewPaneProps {
   rawHtml: string;
   theme: ThemeDefinition;
-  themeId: ThemeId;
-  onThemeChange: (themeId: ThemeId) => void;
 }
 
 type ExportStatus = "idle" | "exported" | "failed";
@@ -69,7 +66,7 @@ function deriveFileStem(markdown: string): string {
   return cleaned || "untitled";
 }
 
-export function PreviewPane({ rawHtml, theme, themeId, onThemeChange }: PreviewPaneProps) {
+export function PreviewPane({ rawHtml, theme }: PreviewPaneProps) {
   const { t } = useTranslation();
   const toggleThemePanel = useEditorStore((state) => state.toggleThemePanel);
   const isThemePanelOpen = useEditorStore((state) => state.isThemePanelOpen);
@@ -267,19 +264,14 @@ export function PreviewPane({ rawHtml, theme, themeId, onThemeChange }: PreviewP
                   ? t("common.exportFailed")
                   : t("common.exportMd")}
             </button>
-            <span className="pane-theme">
-              主题
-              <ThemeSelector themeId={themeId} onThemeChange={onThemeChange} />
-            </span>
             <button
               type="button"
-              className="theme-panel-toggle"
+              className="preview-theme-btn"
               aria-pressed={isThemePanelOpen}
               onClick={toggleThemePanel}
-              title="主题配置"
-              aria-label="主题配置"
+              title={`主题配置：${theme.name}`}
             >
-              ⚙
+              {theme.name}
             </button>
           </>
         }

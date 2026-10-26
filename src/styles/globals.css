@@ -1071,6 +1071,9 @@ body.is-resizing {
 }
 
 .preview-layout {
+  /* The pane is a grid, so this item's automatic minimum size is its
+     min-content width; a wide table would push it past the column. */
+  min-width: 0;
   min-height: 0;
   display: flex;
   overflow: hidden;
@@ -1078,6 +1081,10 @@ body.is-resizing {
 
 .preview-layout .preview-scroll {
   flex: 1;
+  /* Without this the min-content width of a wide table wins over the
+     flex basis, the column grows past the window and the preview gets
+     clipped instead of scrolled. */
+  min-width: 0;
 }
 
 .theme-panel {
@@ -1486,6 +1493,10 @@ body.is-resizing {
   min-width: 0;
   min-height: 0;
   display: grid;
+  /* Without an explicit column the implicit track is auto, i.e.
+     max-content: a wide table in the preview widened the column past
+     the pane and got clipped instead of scrolling. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr;
   overflow: hidden;
   background: var(--baker-surface);
@@ -1564,11 +1575,11 @@ body.is-resizing {
   font-family: "SFMono-Regular", Consolas, monospace;
   line-height: 1.7;
   overflow: auto;
-  overflow-x: hidden;
 }
 
 .editor-pane .cm-content {
   word-break: break-word;
+  min-width: 0;
 }
 
 .markdown-editor {
@@ -3386,6 +3397,10 @@ body.is-resizing {
   letter-spacing: 0.02em;
 }
 
+.cm-block-table {
+  overflow-x: auto;
+}
+
 .cm-block-table table {
   border-collapse: collapse;
   font-size: 12px;
@@ -3436,4 +3451,59 @@ body.is-resizing {
   flex: 1;
   min-width: 0;
   min-height: 0;
+}
+
+/* A table that cannot fit wraps first and scrolls only as a last
+   resort; either way it stays inside its column. The sheet itself
+   scrolls because the table's min-content width is a hard floor —
+   cells can only be broken so far. */
+.preview-sheet {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.preview-sheet table {
+  max-width: 100%;
+}
+
+.preview-sheet th,
+.preview-sheet td {
+  overflow-wrap: anywhere;
+}
+
+/* Compact theme entry: the full selector lives in the drawer, so the
+   pane header only needs a label that opens it. */
+.preview-theme-btn {
+  max-width: 150px;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--baker-border-strong);
+  border-radius: 7px;
+  background: var(--baker-surface);
+  color: var(--baker-text-muted);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.preview-theme-btn:hover,
+.preview-theme-btn[aria-pressed="true"] {
+  background: var(--baker-surface-muted);
+  color: var(--baker-text);
+}
+
+/* At the 960px minimum window the preview column is ~320px wide, and the
+   header (预览 + 译成英文 + 导出 MD + theme) overflows by a few pixels.
+   The title is the least useful part there, so it steps aside. */
+.preview-pane {
+  container-type: inline-size;
+}
+
+@container (max-width: 380px) {
+  .preview-pane .pane-title {
+    display: none;
+  }
 }

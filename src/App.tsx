@@ -219,12 +219,7 @@ function App() {
     <EditorPane markdownValue={markdown} onMarkdownChange={setMarkdown} mathReady={mathReady} />
   );
   const previewPane = rendered ? (
-    <PreviewPane
-      rawHtml={rendered.rawHtml}
-      theme={activeTheme}
-      themeId={themeId}
-      onThemeChange={setThemeId}
-    />
+    <PreviewPane rawHtml={rendered.rawHtml} theme={activeTheme} />
   ) : (
     <section className="pane preview-pane" aria-label="预览">
       <div className="pane-header">
