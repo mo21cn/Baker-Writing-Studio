@@ -44,6 +44,8 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
   });
   const registerAssetFile = useEditorStore((state) => state.registerAssetFile);
   const setCopyStatus = useEditorStore((state) => state.setCopyStatus);
+  const pendingCaret = useEditorStore((state) => state.pendingCaret);
+  const clearPendingCaret = useEditorStore((state) => state.clearPendingCaret);
   const [lineNumbers, setLineNumbers] = useState(readLineNumbers);
   const [bubble, setBubble] = useState<BubblePosition | null>(null);
   const [viewVersion, setViewVersion] = useState(0);
@@ -118,6 +120,17 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
     ],
     [imageOptions],
   );
+
+  // Tools append to the document; put the caret where the text landed so
+  // the author can keep typing instead of scrolling to find it.
+  useEffect(() => {
+    if (pendingCaret === null) return;
+    const view = viewRef.current;
+    if (!view) return;
+    const target = Math.min(pendingCaret, view.state.doc.length);
+    view.dispatch({ selection: { anchor: target }, scrollIntoView: true });
+    clearPendingCaret();
+  }, [pendingCaret, clearPendingCaret]);
 
   const basicSetup = useMemo(
     () => ({

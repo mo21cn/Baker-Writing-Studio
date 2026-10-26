@@ -16,7 +16,8 @@ export type InlineNode =
   | { kind: "strong"; children: InlineNode[] }
   | { kind: "emph"; children: InlineNode[] }
   | { kind: "code"; text: string }
-  | { kind: "math"; latex: string; display: false };
+  | { kind: "math"; latex: string; display: false }
+  | { kind: "unsupported"; command: string };
 
 export type BlockNode =
   | { kind: "heading"; level: 1 | 2 | 3; children: InlineNode[]; numbered: boolean }

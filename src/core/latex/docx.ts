@@ -47,6 +47,9 @@ function inlineRuns(nodes: InlineNode[]): Array<Run | TextRun> {
       case "emph":
         runs.push(new TextRun({ text: plainText(node.children), italics: true }));
         break;
+      case "unsupported":
+        runs.push(new TextRun({ text: node.command, color: "A3542D" }));
+        break;
       case "math":
         try {
           runs.push(
@@ -68,6 +71,7 @@ function plainText(nodes: InlineNode[]): string {
     .map((node) => {
       if (node.kind === "text" || node.kind === "code") return node.text;
       if (node.kind === "math") return node.latex;
+      if (node.kind === "unsupported") return node.command;
       return plainText(node.children);
     })
     .join("")

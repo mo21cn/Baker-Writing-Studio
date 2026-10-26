@@ -203,8 +203,9 @@ function parseInline(text: string, startLine: number, diagnostics: Diagnostic[])
           command: `\\${name}`,
           message: `不支持的命令 \\${name}`,
         });
-        // Show it literally so the author can see what was ignored.
-        buffer += text.slice(index, command.end);
+        // Kept in the stream and marked, so the preview can point at it.
+        flush();
+        nodes.push({ kind: "unsupported", command: `\\${name}` });
         index = command.end;
         continue;
       }

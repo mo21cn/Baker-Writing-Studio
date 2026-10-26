@@ -138,6 +138,8 @@ function App() {
   const statusMessage = useEditorStore((state) => state.statusMessage);
   const isThemePanelOpen = useEditorStore((state) => state.isThemePanelOpen);
   const closeThemePanel = useEditorStore((state) => state.closeThemePanel);
+  const pendingView = useEditorStore((state) => state.pendingView);
+  const clearPendingView = useEditorStore((state) => state.clearPendingView);
   const setMarkdown = useEditorStore((state) => state.setMarkdown);
   const setThemeId = useEditorStore((state) => state.setThemeId);
 
@@ -160,6 +162,14 @@ function App() {
       cancelled = true;
     };
   }, [activeDocId, debouncedMarkdown]);
+
+  // A tool (the LaTeX page) can ask for the editor once it has written
+  // something into the document.
+  useEffect(() => {
+    if (!pendingView) return;
+    setView(pendingView);
+    clearPendingView();
+  }, [pendingView, clearPendingView]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {

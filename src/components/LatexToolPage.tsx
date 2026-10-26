@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import CodeMirror from "@uiw/react-codemirror";
+import { StreamLanguage } from "@codemirror/language";
+import { stex } from "@codemirror/legacy-modes/mode/stex";
 import { EditorView } from "@codemirror/view";
+import { useEditorStore } from "../store/editorStore";
 import { Document, HeadingLevel, ImageRun, Packer, Paragraph, Run, TextRun } from "docx";
 import { Math as DocxMath, latexToMath } from "docx/math";
 import { serializeFormula } from "../core/formula/serializer";
 import type { FormulaWrap } from "../core/formula/model";
 import { ensureMathJax, isMathJaxReady, texToSvg } from "../core/markdown/mathToSvg";
 import { parseLatex } from "../core/latex/parseLatex";
+import { LATEX_SAMPLE } from "../core/latex/samples";
 import { renderBlocks } from "../core/latex/render";
 import { blocksToDocxParagraphs } from "../core/latex/docx";
 import { FORMULA_DRAFT_KEY, parseFormulaDraft, readDraft, writeDraft } from "../core/tools/drafts";
@@ -30,7 +34,7 @@ const WRAP_OPTIONS: { id: FormulaWrap; label: string; description: string }[] = 
   { id: "display", label: "块级 $$...$$", description: "独立成段的公式" },
 ];
 
-const SAMPLE = "\\section{引言}\n这是一段正文，行内公式 $E = mc^2$ 可以混排。\n\n\\begin{itemize}\n\\item 第一点\n\\item 第二点\n\\end{itemize}";
+
 
 function readMode(): PageMode {
   if (typeof window === "undefined") return "fragment";
@@ -111,6 +115,10 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
   const [copyStatus, setCopyStatus] = useState<CopyStatus>("idle");
   const [docxStatus, setDocxStatus] = useState<DocxStatus>("idle");
   const [mathReady, setMathReady] = useState(isMathJaxReady());
+
+  const appendToDocument = useEditorStore((state) => state.appendToDocument);
+  const requestEditorView = useEditorStore((state) => state.requestEditorView);
+  const setCopyStatusStore = useEditorStore((state) => state.setCopyStatus);
 
   const copyTimer = useRef<number | null>(null);
   const docxTimer = useRef<number | null>(null);
@@ -294,6 +302,23 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
     return children;
   };
 
+  /** Sends the current fragment to the document and shows the editor. */
+  const handleInsertIntoDocument = () => {
+    const snippet = mode === "document" ? latex.trim() : output.wrapped.trim();
+    if (!snippet) return;
+    appendToDocument(snippet);
+    requestEditorView();
+    setCopyStatusStore("success", "已插入到正文末尾");
+  };
+
+  const handleExportTex = () => {
+    if (!latex.trim()) return;
+    const heading = /\\section\*?\{([^}]*)\}/.exec(latex);
+    const stem = (heading?.[1] ?? "document").replace(/[\\/:*?"<>|\s]+/g, "-").slice(0, 40) || "document";
+    // No BOM: LaTeX readers treat one as text.
+    downloadBlob(new Blob([latex], { type: "application/x-tex;charset=utf-8" }), `${stem}.tex`);
+  };
+
   const handleExportDocx = async () => {
     if (docxTimer.current !== null) window.clearTimeout(docxTimer.current);
 
@@ -326,7 +351,10 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
     docxTimer.current = window.setTimeout(() => setDocxStatus("idle"), 1600);
   };
 
-  const editorExtension = useMemo(() => [EditorView.lineWrapping], []);
+  const editorExtension = useMemo(
+    () => [StreamLanguage.define(stex), EditorView.lineWrapping],
+    [],
+  );
 
   return (
     <WorkspaceSplit
@@ -375,7 +403,7 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
               className="latex-editor"
             />
             {mode === "document" && !latex.trim() ? (
-              <button type="button" className="latex-sample" onClick={() => setLatex(SAMPLE)}>
+              <button type="button" className="latex-sample" onClick={() => setLatex(LATEX_SAMPLE)}>
                 插入示例文档
               </button>
             ) : null}
@@ -436,6 +464,25 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
           padded={false}
           actions={
             <>
+              <button
+                type="button"
+                className="tool-btn"
+                onClick={handleInsertIntoDocument}
+                disabled={mode === "document" ? !latex.trim() : !output.wrapped.trim()}
+                title="把当前内容追加到正文末尾"
+              >
+                插入到正文
+              </button>
+              {mode === "document" && (
+                <button
+                  type="button"
+                  className="tool-btn"
+                  onClick={handleExportTex}
+                  disabled={!latex.trim()}
+                >
+                  导出 .tex
+                </button>
+              )}
               <button
                 type="button"
                 className="tool-btn tool-btn-primary"

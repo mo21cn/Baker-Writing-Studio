@@ -41,6 +41,8 @@ function inlineToHtml(nodes: InlineNode[], options: RenderOptions): string {
           return `<strong>${inlineToHtml(node.children, options)}</strong>`;
         case "emph":
           return `<em>${inlineToHtml(node.children, options)}</em>`;
+        case "unsupported":
+          return `<span class="latex-unsupported-inline" title="不支持的命令">${escapeHtml(node.command)}</span>`;
         case "math": {
           const svg = options.math(node.latex, false);
           return svg

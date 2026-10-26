@@ -42,10 +42,10 @@ const ICONS: Record<AppView, ReactNode> = {
 };
 
 const ITEMS: RailItem[] = [
-  { id: "latex", label: "LaTeX", icon: ICONS.latex },
   { id: "editor", label: "编辑器", icon: ICONS.editor },
   { id: "wechat", label: "公众号 → MD", icon: ICONS.wechat },
   { id: "table", label: "表格转换", icon: ICONS.table },
+  { id: "latex", label: "LaTeX", icon: ICONS.latex },
 ];
 
 /**

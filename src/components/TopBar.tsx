@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BrandLogo, hasCustomBrandLogo, writeBrandLogo } from "./BrandLogo";
+import { BrandLogo } from "./BrandLogo";
 import type { AppView } from "./ActivityRail";
 import { copyHtml } from "../core/copy/copyHtml";
 import { exportLongImage } from "../core/export/exportLongImage";
@@ -41,8 +41,6 @@ export function TopBar({ markdownValue, view, previewVisible, onTogglePreview }:
   const setWarnings = useEditorStore((state) => state.setWarnings);
 
   const [exportStatus, setExportStatus] = useState<"idle" | "exporting">("idle");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [customLogo, setCustomLogo] = useState(hasCustomBrandLogo);
   const [copyDialog, setCopyDialog] = useState<{
     title: string;
     message: string;
@@ -50,58 +48,8 @@ export function TopBar({ markdownValue, view, previewVisible, onTogglePreview }:
     tone: "success" | "error";
   } | null>(null);
 
-  const menuRef = useRef<HTMLDivElement>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
-
   const activeDoc = documents.find((doc) => doc.id === activeDocId);
   const docTitle = activeDoc?.title ?? "未命名文档";
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onDown = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setMenuOpen(false);
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(false);
-    };
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [menuOpen]);
-
-  const handleLogoFile = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setCopyStatus("error", "Logo 需要是图片文件");
-      return;
-    }
-    if (file.size > 400 * 1024) {
-      setCopyStatus("error", "Logo 建议小于 400 KB");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        writeBrandLogo(reader.result);
-        setCustomLogo(true);
-        setMenuOpen(false);
-        setCopyStatus("success", "Logo 已更新");
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const resetLogo = () => {
-    writeBrandLogo(null);
-    setCustomLogo(false);
-    setMenuOpen(false);
-    setCopyStatus("success", "已恢复默认 Logo");
-  };
 
   const handleExportLongImage = async () => {
     if (!markdownValue.trim()) return;
@@ -170,33 +118,8 @@ export function TopBar({ markdownValue, view, previewVisible, onTogglePreview }:
 
   return (
     <header className="topbar">
-      <div className="brand-menu-wrap" ref={menuRef}>
-        <button
-          type="button"
-          className="brand-button"
-          title="更换 Logo"
-          aria-haspopup="menu"
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          <BrandLogo />
-          <span className="brand-caret" aria-hidden>
-            ▾
-          </span>
-        </button>
-        {menuOpen && (
-          <div className="brand-menu" role="menu">
-            <button type="button" role="menuitem" onClick={() => fileRef.current?.click()}>
-              更换 Logo…
-            </button>
-            {customLogo && (
-              <button type="button" role="menuitem" onClick={resetLogo}>
-                恢复默认
-              </button>
-            )}
-          </div>
-        )}
-        <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleLogoFile} />
+      <div className="brand-fixed">
+        <BrandLogo />
       </div>
 
       <span className="topbar-divider" aria-hidden />

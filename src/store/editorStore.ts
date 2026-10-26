@@ -54,11 +54,24 @@ interface EditorState {
   customThemeTokens: ThemeTokenInput;
   customThemeName: string;
   isThemePanelOpen: boolean;
+  /**
+   * Where the caret should land next time the editor is shown. Tools that
+   * append to the document (the LaTeX page) set it so the author does not
+   * have to hunt for what was just inserted.
+   */
+  pendingCaret: number | null;
+  /** Set when a tool wants the shell to bring the editor forward. */
+  pendingView: "editor" | null;
   themeActionStatus: {
     tone: ThemeActionTone;
     message: string;
   };
   setMarkdown: (markdown: string) => void;
+  /** Appends a block to the active document and asks the caret to follow. */
+  appendToDocument: (block: string) => void;
+  clearPendingCaret: () => void;
+  clearPendingView: () => void;
+  requestEditorView: () => void;
   setThemeId: (themeId: ThemeId) => void;
   setPlatform: (platform: PlatformId) => void;
   setCopyStatus: (copyStatus: CopyStatus, statusMessage: string) => void;
@@ -482,12 +495,33 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   customThemeTokens: initialActiveDoc?.customThemeTokens ?? defaultCustomTokens,
   customThemeName: initialActiveDoc?.customThemeName ?? "Custom",
   isThemePanelOpen: false,
+  pendingCaret: null,
+  pendingView: null,
   themeActionStatus: { tone: "idle", message: "" },
 
   setMarkdown: (markdown) => {
     const documents = updateActiveDocument(get, { markdown });
     set({ markdown, documents, statusMessage: i18n.t("editor.draftSaved") });
   },
+
+  appendToDocument: (block) => {
+    const current = get().markdown.replace(/\s+$/, "");
+    const separator = current.length > 0 ? "\n\n" : "";
+    const markdown = current + separator + block;
+    const documents = updateActiveDocument(get, { markdown });
+    set({
+      markdown,
+      documents,
+      pendingCaret: markdown.length,
+      statusMessage: "已插入到正文末尾",
+    });
+  },
+
+  clearPendingCaret: () => set({ pendingCaret: null }),
+
+  requestEditorView: () => set({ pendingView: "editor" }),
+
+  clearPendingView: () => set({ pendingView: null }),
 
   setThemeId: (themeId) => {
     const documents = updateActiveDocument(get, { themeId });
