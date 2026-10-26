@@ -28,7 +28,7 @@ const SIDEBAR_COLLAPSED_KEY = "r2md-sidebar-collapsed";
 const VIEW_STORAGE_KEY = "r2md-active-view";
 const PREVIEW_VISIBLE_KEY = "r2md-preview-visible";
 const RAIL_WIDTH = 48;
-const TOOL_VIEWS = ["wechat", "table", "formula"] as const;
+const TOOL_VIEWS = ["wechat", "table", "latex"] as const;
 const TOOL_IDLE_UNLOAD_MS = 10 * 60 * 1000;
 const TOOL_REAP_INTERVAL_MS = 60 * 1000;
 
@@ -58,8 +58,8 @@ const WechatToolPage = lazy(() =>
 const TableToolPage = lazy(() =>
   import("./components/TableToolPage").then((module) => ({ default: module.TableToolPage })),
 );
-const FormulaToolPage = lazy(() =>
-  import("./components/FormulaToolPage").then((module) => ({ default: module.FormulaToolPage })),
+const LatexToolPage = lazy(() =>
+  import("./components/LatexToolPage").then((module) => ({ default: module.LatexToolPage })),
 );
 
 function readSidebarCollapsed(): boolean {
@@ -70,7 +70,15 @@ function readSidebarCollapsed(): boolean {
 function readStoredView(): AppView {
   if (typeof window === "undefined") return "editor";
   const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
-  if (stored === "editor" || stored === "wechat" || stored === "table" || stored === "formula") {
+
+  // The formula page became the LaTeX page; keep anyone who had it open
+  // there instead of dropping them back to the editor.
+  if (stored === "formula") {
+    window.localStorage.setItem(VIEW_STORAGE_KEY, "latex");
+    return "latex";
+  }
+
+  if (stored === "editor" || stored === "wechat" || stored === "table" || stored === "latex") {
     return stored;
   }
   return "editor";
@@ -345,7 +353,7 @@ function App() {
                 <Suspense fallback={<div className="pane-loading">加载中…</div>}>
                   {tool === "wechat" && <WechatToolPage />}
                   {tool === "table" && <TableToolPage />}
-                  {tool === "formula" && <FormulaToolPage />}
+                  {tool === "latex" && <LatexToolPage />}
                 </Suspense>
               </div>
             ) : null,

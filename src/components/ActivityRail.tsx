@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export type AppView = "editor" | "wechat" | "table" | "formula";
+export type AppView = "editor" | "wechat" | "table" | "latex";
 
 interface ActivityRailProps {
   view: AppView;
@@ -34,7 +34,7 @@ const ICONS: Record<AppView, ReactNode> = {
       <path d="M4 10h16M10 10v9" />
     </svg>
   ),
-  formula: (
+  latex: (
     <svg viewBox="0 0 24 24" aria-hidden>
       <path d="M17 5H8l6 7-6 7h9" />
     </svg>
@@ -42,10 +42,10 @@ const ICONS: Record<AppView, ReactNode> = {
 };
 
 const ITEMS: RailItem[] = [
+  { id: "latex", label: "LaTeX", icon: ICONS.latex },
   { id: "editor", label: "编辑器", icon: ICONS.editor },
   { id: "wechat", label: "公众号 → MD", icon: ICONS.wechat },
   { id: "table", label: "表格转换", icon: ICONS.table },
-  { id: "formula", label: "公式 → LaTeX", icon: ICONS.formula },
 ];
 
 /**

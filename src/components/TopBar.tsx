@@ -14,7 +14,7 @@ const VIEW_LABELS: Record<AppView, string> = {
   editor: "编辑器",
   wechat: "公众号 → Markdown",
   table: "表格转换",
-  formula: "公式 → LaTeX",
+  latex: "LaTeX",
 };
 
 interface TopBarProps {

@@ -13,7 +13,7 @@ import { texToSvg } from "../core/markdown/mathToSvg";
 import { CanvasPane } from "./CanvasPane";
 import { WorkspaceSplit } from "./WorkspaceSplit";
 
-interface FormulaToolPageProps {
+interface LatexToolPageProps {
   initialLatex?: string;
 }
 
@@ -109,7 +109,7 @@ async function svgToPngBlob(svg: string, scale = 2): Promise<{ blob: Blob; width
   }
 }
 
-export function FormulaToolPage({ initialLatex = "\\frac{a}{b}" }: FormulaToolPageProps) {
+export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPageProps) {
   const [latex, setLatex] = useState<string>(
     () => readDraft(FORMULA_DRAFT_KEY, parseFormulaDraft)?.latex ?? initialLatex,
   );
