@@ -77,7 +77,10 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
       />
       <div className="pane-body">
         <CodeMirror
-          key={`${activeDocId ?? "no-doc"}-${mathReady ? "math" : "plain"}`}
+          // Remount only when a formula document gains the engine: the
+          // widgets resolve their SVG at construction time. Documents
+          // without formulas keep their editor (and cursor) untouched.
+          key={`${activeDocId ?? "no-doc"}-${mathReady || !markdownValue.includes("$") ? "math" : "plain"}`}
           value={markdownValue}
           height="100%"
           extensions={extensions}
