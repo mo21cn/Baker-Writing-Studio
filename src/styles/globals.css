@@ -3364,3 +3364,76 @@ body.is-resizing {
   color: var(--baker-text-muted);
   letter-spacing: 0.02em;
 }
+
+/* ---- block previews under tables and fenced code ---------------- */
+
+.cm-block-preview {
+  margin: 6px 0 10px 4px;
+  padding: 8px 10px 10px;
+  border: 1px solid #e8e8ec;
+  border-left: 3px solid #d8d8de;
+  border-radius: 8px;
+  background: #fbfbfc;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.cm-block-label {
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8a8a92;
+  letter-spacing: 0.02em;
+}
+
+.cm-block-table table {
+  border-collapse: collapse;
+  font-size: 12px;
+  max-width: 100%;
+}
+
+.cm-block-table th,
+.cm-block-table td {
+  padding: 4px 10px;
+  border: 1px solid #e2e2e8;
+  white-space: nowrap;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cm-block-table th {
+  background: #f2f2f5;
+  font-weight: 600;
+}
+
+.cm-block-code pre {
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow: auto;
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre;
+}
+
+.cm-block-code code {
+  display: block;
+  padding: 2px 0;
+  background: transparent;
+}
+
+.cm-block-more {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #9a9aa2;
+}
+
+/* ---- kept-alive views: hidden, not unmounted ---------------------- */
+
+.view-slot {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}

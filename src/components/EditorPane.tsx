@@ -4,6 +4,7 @@ import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import { EditorView } from "@codemirror/view";
 import { editorImageExtension } from "./editorImageExtension";
+import { blockPreviewWidgets } from "./editorBlockWidgets";
 import { inlinePreviewWidgets } from "./editorInlineWidgets";
 import { PaneHeader } from "./PaneHeader";
 import { useEditorStore } from "../store/editorStore";
@@ -39,6 +40,7 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
       markdown(),
       EditorView.lineWrapping,
       inlinePreviewWidgets,
+      blockPreviewWidgets,
       editorImageExtension({
         docId: activeDocId,
         markdown: markdownValue,
