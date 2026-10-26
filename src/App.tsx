@@ -19,6 +19,8 @@ const SIDEBAR_COLLAPSED_KEY = "r2md-sidebar-collapsed";
 const VIEW_STORAGE_KEY = "r2md-active-view";
 const PREVIEW_VISIBLE_KEY = "r2md-preview-visible";
 const RAIL_WIDTH = 48;
+// Rail + resize handle + the narrowest useful editor/preview pair.
+const RESERVED_BESIDE_LIST = 48 + 5 + 640;
 
 // Each tool page is its own workspace; splitting them keeps `docx` and
 // the WeChat parser out of the first paint.
@@ -66,6 +68,24 @@ function App() {
     initial: 260,
     offset: RAIL_WIDTH,
   });
+
+  // A width that was comfortable on a wide screen must not swallow a small
+  // window: clamp it against the current viewport instead of trusting the
+  // stored value.
+  const [viewportWidth, setViewportWidth] = useState(
+    () => (typeof window === "undefined" ? 1440 : window.innerWidth),
+  );
+
+  useEffect(() => {
+    const onResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const effectiveListWidth = Math.min(
+    listWidth,
+    Math.max(180, viewportWidth - RESERVED_BESIDE_LIST),
+  );
 
   const markdown = useEditorStore((state) => state.markdown);
   const activeDocId = useEditorStore((state) => state.activeDocId);
@@ -223,7 +243,7 @@ function App() {
 
         <DocumentList
           collapsed={sidebarCollapsed}
-          width={listWidth}
+          width={effectiveListWidth}
           onToggleCollapse={toggleSidebar}
         />
         {!sidebarCollapsed && (
