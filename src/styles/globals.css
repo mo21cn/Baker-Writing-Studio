@@ -3581,3 +3581,42 @@ body.is-resizing {
   min-width: 0;
   border-left: 0;
 }
+
+/* ---- tool canvas panes -------------------------------------------- */
+
+.canvas-pane {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pane-body-pad {
+  padding: 14px 16px;
+  overflow: auto;
+  gap: 10px;
+}
+
+.tool-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.tool-textarea-flush {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  resize: none;
+}
+
+.tool-output-pre-flush {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}

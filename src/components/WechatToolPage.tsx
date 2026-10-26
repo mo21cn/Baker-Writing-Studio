@@ -1,6 +1,8 @@
 ﻿import { useState } from "react";
 import { fetchImportUrl } from "../core/import/fetchImportUrl";
 import { convertWechatHtmlToMarkdown, type ConvertOptions } from "../core/wechat/tool";
+import { CanvasPane } from "./CanvasPane";
+import { WorkspaceSplit } from "./WorkspaceSplit";
 
 type Status = { kind: "idle" | "loading" | "error" | "success"; message: string };
 
@@ -99,17 +101,10 @@ export function WechatToolPage() {
   };
 
   return (
-    <div className="tool-page tool-page-wechat">
-      <header className="tool-page-header">
-        <div>
-          <h2>WeChat → Markdown</h2>
-          <p className="tool-page-subtitle">输入公众号文章 URL，抓取并转换为 Markdown。</p>
-        </div>
-      </header>
-
-      <div className="tool-page-grid">
-        <section className="tool-card tool-card-editor">
-          <h3>输入</h3>
+    <WorkspaceSplit
+      storageKey="r2md-canvas-wechat"
+      left={
+        <CanvasPane side="left" title="输入" meta="公众号 / 通用网页">
           <label className="tool-field">
             <span>文章 URL</span>
             <input
@@ -172,11 +167,14 @@ export function WechatToolPage() {
               ))}
             </ul>
           )}
-        </section>
-
-        <section className="tool-card tool-card-output">
-          <div className="tool-card-output-header">
-            <h3>Markdown 输出</h3>
+        </CanvasPane>
+      }
+      right={
+        <CanvasPane
+          side="right"
+          title="Markdown 输出"
+          padded={false}
+          actions={
             <button
               type="button"
               className="tool-btn tool-btn-primary"
@@ -190,17 +188,18 @@ export function WechatToolPage() {
                   ? "导出失败"
                   : "导出 .md"}
             </button>
-          </div>
+          }
+        >
           <textarea
-            className="tool-textarea tool-textarea-output"
+            className="tool-textarea tool-textarea-output tool-textarea-flush"
             rows={18}
             value={markdown}
             readOnly
             placeholder="Markdown 输出会显示在这里。"
             aria-label="Markdown 输出"
           />
-        </section>
-      </div>
-    </div>
+        </CanvasPane>
+      }
+    />
   );
 }

@@ -4,6 +4,8 @@ import { Math as DocxMath, latexToMath } from "docx/math";
 import { serializeFormula } from "../core/formula/serializer";
 import type { FormulaWrap } from "../core/formula/model";
 import { texToSvg } from "../core/markdown/mathToSvg";
+import { CanvasPane } from "./CanvasPane";
+import { WorkspaceSplit } from "./WorkspaceSplit";
 
 interface FormulaToolPageProps {
   initialLatex?: string;
@@ -272,17 +274,10 @@ export function FormulaToolPage({ initialLatex = "\\frac{a}{b}" }: FormulaToolPa
   };
 
   return (
-    <div className="tool-page tool-page-formula">
-      <header className="tool-page-header">
-        <div>
-          <h2>Formula → LaTeX</h2>
-          <p className="tool-page-subtitle">键入 LaTeX 公式，实时预览并复制为可粘贴的片段。</p>
-        </div>
-      </header>
-
-      <div className="tool-page-grid">
-        <section className="tool-card tool-card-editor">
-          <h3>LaTeX 源码</h3>
+    <WorkspaceSplit
+      storageKey="r2md-canvas-formula"
+      left={
+        <CanvasPane side="left" title="LaTeX 输入">
           <textarea
             className="tool-textarea tool-textarea-code"
             rows={4}
@@ -312,12 +307,14 @@ export function FormulaToolPage({ initialLatex = "\\frac{a}{b}" }: FormulaToolPa
               </label>
             ))}
           </div>
-        </section>
-
-        <section className="tool-card tool-card-output">
-          <div className="tool-card-output-header">
-            <h3>预览</h3>
-            <div className="tool-card-output-actions">
+        </CanvasPane>
+      }
+      right={
+        <CanvasPane
+          side="right"
+          title="结果"
+          actions={
+            <>
               <button
                 type="button"
                 className="tool-btn tool-btn-primary"
@@ -341,8 +338,9 @@ export function FormulaToolPage({ initialLatex = "\\frac{a}{b}" }: FormulaToolPa
               >
                 {copyStatus === "copied" ? "已复制" : copyStatus === "failed" ? "复制失败" : "复制 LaTeX"}
               </button>
-            </div>
-          </div>
+            </>
+          }
+        >
           <div className="formula-preview" aria-live="polite">
             {previewSvg ? (
               <div
@@ -357,8 +355,8 @@ export function FormulaToolPage({ initialLatex = "\\frac{a}{b}" }: FormulaToolPa
 
           <h3 className="tool-card-subtitle">输出</h3>
           <pre className="tool-output-pre">{output.wrapped || "(空)"}</pre>
-        </section>
-      </div>
-    </div>
+        </CanvasPane>
+      }
+    />
   );
 }

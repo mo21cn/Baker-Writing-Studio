@@ -10,6 +10,8 @@ import {
 } from "../core/table/model";
 import { parseClipboardTable } from "../core/table/parser";
 import { serializeTable, type TableFormat } from "../core/table/serializer";
+import { CanvasPane } from "./CanvasPane";
+import { WorkspaceSplit } from "./WorkspaceSplit";
 
 type FormatTab = TableFormat;
 
@@ -135,34 +137,36 @@ export function TableToolPage(_props: TableToolPageProps = {}) {
   };
 
   return (
-    <div className="tool-page tool-page-table">
-      <header className="tool-page-header">
-        <div>
-          <h2>Table Converter</h2>
-          <p className="tool-page-subtitle">可视化编辑表格，导出 Markdown / LaTeX / CSV / HTML。</p>
-        </div>
-        <div className="tool-page-actions">
-          <button type="button" className="tool-btn tool-btn-ghost" onClick={handleReset}>
-            清空
-          </button>
-          <button type="button" className="tool-btn tool-btn-ghost" onClick={handleClipboardImport}>
-            从剪贴板导入
-          </button>
-          <button type="button" className="tool-btn tool-btn-ghost" onClick={handleToggleHeader}>
-            {model.headerRow ? "取消表头" : "设为表头"}
-          </button>
-          <button type="button" className="tool-btn tool-btn-primary" onClick={handleAddRow}>
-            + 行
-          </button>
-          <button type="button" className="tool-btn tool-btn-primary" onClick={handleAddColumn}>
-            + 列
-          </button>
-        </div>
-      </header>
+    <WorkspaceSplit
+      storageKey="r2md-canvas-table"
+      left={
+        <CanvasPane
+          side="left"
+          title="表格"
+          meta={`${model.cells.length} × ${model.cols}`}
+          actions={
+            <>
+              <button type="button" className="tool-btn" onClick={handleAddRow}>
+                + 行
+              </button>
+              <button type="button" className="tool-btn" onClick={handleAddColumn}>
+                + 列
+              </button>
+            </>
+          }
+        >
+          <div className="tool-row">
+            <button type="button" className="tool-btn tool-btn-ghost" onClick={handleReset}>
+              清空
+            </button>
+            <button type="button" className="tool-btn tool-btn-ghost" onClick={handleClipboardImport}>
+              从剪贴板导入
+            </button>
+            <button type="button" className="tool-btn tool-btn-ghost" onClick={handleToggleHeader}>
+              {model.headerRow ? "取消表头" : "设为表头"}
+            </button>
+          </div>
 
-      <div className="tool-page-grid">
-        <section className="tool-card tool-card-editor">
-          <h3>可视化编辑器</h3>
           <div className="table-editor-wrap">
             <table className="table-editor">
               <thead>
@@ -219,6 +223,7 @@ export function TableToolPage(_props: TableToolPageProps = {}) {
               </tbody>
             </table>
           </div>
+
           <details className="tool-page-collapsible">
             <summary>从文本导入（TSV / CSV / HTML）</summary>
             <textarea
@@ -229,24 +234,29 @@ export function TableToolPage(_props: TableToolPageProps = {}) {
             />
           </details>
           {importStatus && <p className="tool-page-status">{importStatus}</p>}
-        </section>
-
-        <section className="tool-card tool-card-output">
-          <div className="tool-card-output-header">
-            <h3>输出</h3>
-            <div className="tool-format-tabs" role="tablist" aria-label="输出格式">
-              {FORMATS.map((format) => (
-                <button
-                  key={format.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeFormat === format.id}
-                  className={`tool-format-tab${activeFormat === format.id ? " is-active" : ""}`}
-                  onClick={() => setActiveFormat(format.id)}
-                >
-                  {format.label}
-                </button>
-              ))}
+        </CanvasPane>
+      }
+      right={
+        <CanvasPane
+          side="right"
+          title="输出"
+          padded={false}
+          actions={
+            <>
+              <div className="tool-format-tabs" role="tablist" aria-label="输出格式">
+                {FORMATS.map((format) => (
+                  <button
+                    key={format.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeFormat === format.id}
+                    className={`tool-format-tab${activeFormat === format.id ? " is-active" : ""}`}
+                    onClick={() => setActiveFormat(format.id)}
+                  >
+                    {format.label}
+                  </button>
+                ))}
+              </div>
               <button
                 type="button"
                 className="tool-btn tool-btn-primary"
@@ -260,13 +270,14 @@ export function TableToolPage(_props: TableToolPageProps = {}) {
                     ? "导出失败"
                     : `导出 .${activeFormatMeta?.extension ?? ""}`}
               </button>
-            </div>
-          </div>
-          <pre className="tool-output-pre" aria-live="polite">
+            </>
+          }
+        >
+          <pre className="tool-output-pre tool-output-pre-flush" aria-live="polite">
             {output || "(空)"}
           </pre>
-        </section>
-      </div>
-    </div>
+        </CanvasPane>
+      }
+    />
   );
 }
