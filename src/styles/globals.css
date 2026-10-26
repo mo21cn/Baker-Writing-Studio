@@ -3631,3 +3631,270 @@ body.is-resizing {
   font-style: normal;
   color: #8a8a92;
 }
+
+/* ---- LaTeX page --------------------------------------------------- */
+
+.latex-mode-switch {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--baker-border-strong);
+  border-radius: 8px;
+}
+
+.latex-mode-switch button {
+  height: 20px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--baker-text-muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.latex-mode-switch button[aria-pressed="true"] {
+  background: #1f1f24;
+  color: #fff;
+}
+
+.latex-source {
+  flex: 1;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--baker-border-strong);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.latex-source .cm-editor {
+  flex: 1;
+  min-height: 0;
+  font-size: 13px;
+}
+
+.latex-source .cm-scroller {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  line-height: 1.65;
+}
+
+.latex-sample {
+  margin: 6px 8px 8px;
+  align-self: flex-start;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px dashed var(--baker-border-strong);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--baker-text-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.latex-diagnostics {
+  flex-shrink: 0;
+  max-height: 150px;
+  overflow: auto;
+  padding: 8px 10px;
+  border: 1px solid var(--baker-border);
+  border-radius: 8px;
+  background: var(--baker-surface-muted);
+  font-size: 12px;
+}
+
+.latex-diagnostics-ok {
+  margin: 0;
+  color: #5c8a5c;
+}
+
+.latex-diagnostics-title {
+  margin: 0 0 6px;
+  font-weight: 600;
+  color: #a3542d;
+}
+
+.latex-diagnostics ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.latex-diagnostics li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.latex-diagnostics li button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--baker-accent);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.latex-diagnostics code {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: #fff2e8;
+  color: #a3542d;
+}
+
+.latex-preview-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.latex-preview {
+  min-width: 0;
+  padding: 28px 32px;
+  background: var(--baker-surface);
+  border: 1px solid var(--baker-border);
+  border-radius: var(--baker-radius);
+  box-shadow: var(--baker-shadow);
+  line-height: 1.75;
+  font-size: 14px;
+}
+
+.latex-preview h2 {
+  margin: 18px 0 8px;
+  font-size: 20px;
+}
+
+.latex-preview h3 {
+  margin: 14px 0 6px;
+  font-size: 16px;
+}
+
+.latex-preview h4 {
+  margin: 12px 0 4px;
+  font-size: 14px;
+}
+
+.latex-preview p {
+  margin: 8px 0;
+}
+
+.latex-preview blockquote {
+  margin: 10px 0;
+  padding: 6px 14px;
+  border-left: 3px solid var(--baker-border-strong);
+  color: var(--baker-text-muted);
+}
+
+.latex-preview ul,
+.latex-preview ol {
+  margin: 8px 0;
+  padding-left: 22px;
+}
+
+.latex-preview code {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--baker-surface-muted);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+}
+
+.latex-preview .latex-code {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--baker-surface-muted);
+  overflow: auto;
+}
+
+.latex-preview .latex-code code {
+  padding: 0;
+  background: transparent;
+}
+
+.latex-preview .latex-math-block {
+  margin: 12px 0;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.latex-preview .latex-math svg,
+.latex-preview .latex-math-block svg {
+  max-width: 100%;
+}
+
+.latex-preview .latex-unsupported {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fff2e8;
+  color: #a3542d;
+  font-size: 12px;
+}
+
+.latex-preview-empty {
+  margin: 0;
+  color: var(--baker-text-muted);
+  font-size: 13px;
+}
+
+/* ---- symbol palette ---------------------------------------------- */
+
+.latex-symbol-wrap {
+  position: relative;
+}
+
+.latex-symbol-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  width: 292px;
+  max-height: 320px;
+  overflow: auto;
+  padding: 10px 12px 12px;
+  background: var(--baker-surface);
+  border: 1px solid var(--baker-border-strong);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+}
+
+.latex-symbol-panel h4 {
+  margin: 8px 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--baker-text-muted);
+}
+
+.latex-symbol-panel h4:first-of-type {
+  margin-top: 2px;
+}
+
+.latex-symbol-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.latex-symbol-grid button {
+  height: 28px;
+  border: 1px solid var(--baker-border);
+  border-radius: 6px;
+  background: var(--baker-surface);
+  color: var(--baker-text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.latex-symbol-grid button:hover {
+  background: var(--baker-surface-muted);
+}
