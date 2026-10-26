@@ -126,20 +126,57 @@ function App() {
   const [mathReady, setMathReady] = useState(isMathJaxReady());
 
   useEffect(() => {
+    if (mathReady) return;
+
     let cancelled = false;
-    void ensureMathJax()
-      .catch(() => undefined)
-      .then(() => {
-        if (!cancelled) setMathReady(true);
-      });
+    let timer: number | undefined;
+
+    // The first dynamic import can lose a race with the dev server's
+    // dependency optimisation, so a single failure must not be treated as
+    // "loaded". Keep retrying for as long as the view lives: once the
+    // converter exists this flips mathReady, which re-renders the preview
+    // and re-mounts the editor so inline formula widgets can rasterise.
+    const attempt = () => {
+      if (cancelled) return;
+      if (isMathJaxReady()) {
+        setMathReady(true);
+        return;
+      }
+
+      void ensureMathJax()
+        .catch(() => undefined)
+        .then(() => {
+          if (cancelled) return;
+          if (isMathJaxReady()) {
+            setMathReady(true);
+            return;
+          }
+          timer = window.setTimeout(attempt, 1500);
+        });
+    };
+
+    attempt();
+
     return () => {
       cancelled = true;
+      if (timer !== undefined) window.clearTimeout(timer);
     };
-  }, []);
+  }, [mathReady]);
+
+  // Never leave the reader staring at a spinner because a 1.8 MB engine is
+  // slow: after a short grace period the preview renders with plain-text
+  // formulas and upgrades itself when the engine lands.
+  const [mathGraceOver, setMathGraceOver] = useState(false);
+
+  useEffect(() => {
+    if (mathReady || mathGraceOver) return;
+    const timer = window.setTimeout(() => setMathGraceOver(true), 4000);
+    return () => window.clearTimeout(timer);
+  }, [mathReady, mathGraceOver]);
 
   const rendered = useMemo(
-    () => (mathReady ? renderMarkdown({ markdown: previewMarkdown }) : null),
-    [previewMarkdown, mathReady],
+    () => (mathReady || mathGraceOver ? renderMarkdown({ markdown: previewMarkdown }) : null),
+    [previewMarkdown, mathReady, mathGraceOver],
   );
 
   const activeTheme = getActiveTheme(themeId, customThemeTokens, customThemeName);
@@ -153,7 +190,9 @@ function App() {
     });
   };
 
-  const editorPane = <EditorPane markdownValue={markdown} onMarkdownChange={setMarkdown} />;
+  const editorPane = (
+    <EditorPane markdownValue={markdown} onMarkdownChange={setMarkdown} mathReady={mathReady} />
+  );
   const previewPane = rendered ? (
     <PreviewPane
       rawHtml={rendered.rawHtml}

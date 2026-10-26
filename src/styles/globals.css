@@ -3620,3 +3620,66 @@ body.is-resizing {
   border-radius: 0;
   background: transparent;
 }
+
+/* ---- editor affordances: line-number toggle + inline widgets ----- */
+
+.pane-action-btn {
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--baker-border-strong);
+  border-radius: 7px;
+  background: var(--baker-surface);
+  color: var(--baker-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.pane-action-btn:hover {
+  background: var(--baker-surface-muted);
+  color: var(--baker-text);
+}
+
+.pane-action-btn[aria-pressed="true"] {
+  background: var(--baker-surface-muted);
+  color: var(--baker-text);
+}
+
+.cm-inline-math {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 3px;
+  padding: 0 5px;
+  border-radius: 5px;
+  background: #f6f6f8;
+  border: 1px solid #e8e8ec;
+  max-height: 22px;
+  overflow: hidden;
+}
+
+.cm-inline-math svg {
+  height: 15px;
+  width: auto;
+  display: block;
+}
+
+.cm-inline-image {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 3px;
+  padding: 0 6px 0 3px;
+  height: 20px;
+  border-radius: 5px;
+  background: #f6f6f8;
+  border: 1px solid #e8e8ec;
+  font-size: 11px;
+  color: #666;
+  vertical-align: middle;
+}
+
+.cm-inline-image img {
+  height: 15px;
+  width: auto;
+  border-radius: 3px;
+  display: block;
+}

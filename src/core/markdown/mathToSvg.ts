@@ -25,7 +25,7 @@ export function isMathJaxReady(): boolean {
  * Load and initialise MathJax. Safe to call repeatedly; concurrent
  * callers share one import. A failed load is retried on the next call.
  */
-export async function ensureMathJax(): Promise<void> {
+export async function ensureMathJax(attempt = 0): Promise<void> {
   if (converter) return;
   if (!loading) {
     loading = import("./mathjaxRuntime")
@@ -37,7 +37,21 @@ export async function ensureMathJax(): Promise<void> {
         throw error;
       });
   }
-  return loading;
+
+  try {
+    await loading;
+  } catch (error) {
+    // The first dynamic import can race with the dev server's dependency
+    // optimisation and fail once; production builds also see the odd
+    // transient chunk failure. Retry before giving up, otherwise the
+    // preview renders every formula as an error for the rest of the
+    // session.
+    if (attempt < 2) {
+      await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
+      return ensureMathJax(attempt + 1);
+    }
+    throw error;
+  }
 }
 
 export function texToSvg(latex: string, options: TexToSvgOptions): string {

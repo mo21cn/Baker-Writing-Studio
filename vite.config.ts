@@ -170,6 +170,16 @@ function importProxyPlugin(): Plugin {
 export default defineConfig({
   plugins: [react(), importProxyPlugin()],
   base: "./",
+  resolve: {
+    // mathjax-full is CJS and uses instanceof checks across its internal
+    // packages. In dev, Vite pre-bundles it into two chunks, the check fails
+    // with "Right-hand side of 'instanceof' is not an object" and every
+    // formula renders as an error. Deduplicating the package keeps one copy.
+    dedupe: ["mathjax-full"],
+  },
+  optimizeDeps: {
+    include: ["mathjax-full/js/mathjax.js", "mathjax-full/js/input/tex.js", "mathjax-full/js/output/svg.js"],
+  },
   define: {
     // mathjax-full probes a global `PACKAGE_VERSION` in components/version.js;
     // without it, the CJS build falls back to eval('require') and the app dies
