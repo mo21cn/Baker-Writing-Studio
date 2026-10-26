@@ -36,6 +36,56 @@ jobs:
       - name: Unit tests
         run: npm test
 
+  # Screenshots of the three window sizes we design against. They are
+  # uploaded as artifacts rather than compared pixel by pixel (a byte diff
+  # would fail on font-hinting noise), so a reviewer can eyeball the change.
+  # Runs against the production build, not the dev server.
+  visual:
+    runs-on: ubuntu-latest
+    needs: checks
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Serve the build
+        run: |
+          npx vite preview --port 4173 --strictPort --host 127.0.0.1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:4173/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          echo "preview server did not start" >&2
+          exit 1
+
+      - name: Capture baselines
+        run: |
+          mkdir -p shots
+          for size in 1400,900 1200,800 960,600; do
+            width=${size%,*}
+            google-chrome \
+              --headless=new --disable-gpu --hide-scrollbars --no-sandbox \
+              --window-size=$size --virtual-time-budget=9000 \
+              --screenshot="shots/ui-$width.png" http://127.0.0.1:4173/
+          done
+          ls -l shots
+
+      - name: Upload baselines
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-baselines
+          path: shots/*.png
+          if-no-files-found: error
+
   # The Rust side cannot be compiled on the development machine this
   # branch came from, so the desktop shell is verified here: a full
   # `cargo check` of src-tauri. `tauri::generate_context!` embeds the

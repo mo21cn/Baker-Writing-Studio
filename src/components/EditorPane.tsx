@@ -50,16 +50,43 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
   const viewRef = useRef<EditorViewType | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // The extension closes over these callbacks for its whole lifetime.
+  // Rebuilding it on every keystroke made CodeMirror reconfigure the whole
+  // state (27 KB document: 8–31 ms per keystroke), so the current values are
+  // read through a ref instead.
+  const imageOptionsRef = useRef<ImageExtensionOptions>({
+    docId: activeDocId,
+    markdown: markdownValue,
+    assetFiles,
+    onImageInserted: registerAssetFile,
+    onMarkdownChange,
+    onError: () => undefined,
+  });
+  imageOptionsRef.current = {
+    docId: activeDocId,
+    markdown: markdownValue,
+    assetFiles,
+    onImageInserted: registerAssetFile,
+    onMarkdownChange,
+    onError: (message) => setCopyStatus("error", message),
+  };
+
   const imageOptions = useMemo<ImageExtensionOptions>(
     () => ({
-      docId: activeDocId,
-      markdown: markdownValue,
-      assetFiles,
-      onImageInserted: registerAssetFile,
-      onMarkdownChange,
-      onError: (message) => setCopyStatus("error", message),
+      get docId() {
+        return imageOptionsRef.current.docId;
+      },
+      get markdown() {
+        return imageOptionsRef.current.markdown;
+      },
+      get assetFiles() {
+        return imageOptionsRef.current.assetFiles;
+      },
+      onImageInserted: (filename) => imageOptionsRef.current.onImageInserted(filename),
+      onMarkdownChange: (value) => imageOptionsRef.current.onMarkdownChange(value),
+      onError: (message) => imageOptionsRef.current.onError(message),
     }),
-    [activeDocId, markdownValue, assetFiles, registerAssetFile, onMarkdownChange, setCopyStatus],
+    [],
   );
 
   const extensions = useMemo(
@@ -70,8 +97,15 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
       blockPreviewWidgets,
       // Keeps the floating row glued to the current selection.
       EditorView.updateListener.of((update) => {
-        if (!update.selectionSet && !update.docChanged && !update.focusChanged) return;
-        setBubble(bubblePosition(update.view));
+        if (!update.selectionSet && !update.focusChanged) return;
+        const next = bubblePosition(update.view);
+        setBubble((previous) => {
+          if (!next && !previous) return previous;
+          if (next && previous && next.top === previous.top && next.left === previous.left) {
+            return previous;
+          }
+          return next;
+        });
       }),
       EditorView.domEventHandlers({
         blur: () => setBubble(null),
@@ -80,6 +114,16 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
       editorImageExtension(imageOptions),
     ],
     [imageOptions],
+  );
+
+  const basicSetup = useMemo(
+    () => ({
+      lineNumbers,
+      foldGutter: false,
+      highlightActiveLine: true,
+      highlightActiveLineGutter: lineNumbers,
+    }),
+    [lineNumbers],
   );
 
   const toggleLineNumbers = () => {
@@ -162,13 +206,13 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
           onCreateEditor={(view) => {
             viewRef.current = view;
             setViewVersion((value) => value + 1);
+            // Dev-only handle so the editor can be driven from the console
+            // and from browser probes. Stripped from production builds.
+            if (import.meta.env.DEV) {
+              (window as unknown as { __r2mdView?: EditorViewType }).__r2mdView = view;
+            }
           }}
-          basicSetup={{
-            lineNumbers,
-            foldGutter: false,
-            highlightActiveLine: true,
-            highlightActiveLineGutter: lineNumbers,
-          }}
+          basicSetup={basicSetup}
           onChange={onMarkdownChange}
           className="markdown-editor"
         />

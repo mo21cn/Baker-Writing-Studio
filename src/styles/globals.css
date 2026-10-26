@@ -3582,3 +3582,28 @@ body.is-resizing {
 .selection-tools-btn:hover {
   background: rgba(255, 255, 255, 0.14);
 }
+
+/* Collapse trigger inside a block preview label. */
+
+.cm-block-action {
+  margin-left: 8px;
+  padding: 0 6px;
+  height: 18px;
+  border: 1px solid #dcdce2;
+  border-radius: 5px;
+  background: #fff;
+  color: #6a6a72;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cm-block-action:hover {
+  background: #f1f1f4;
+  color: #2a2a30;
+}
+
+.cm-block-folded {
+  border-left-color: #b9c6d8;
+
+}

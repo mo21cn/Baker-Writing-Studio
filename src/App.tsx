@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityRail, type AppView } from "./components/ActivityRail";
 import { DocumentList } from "./components/DocumentList";
 import { EditorPane } from "./components/EditorPane";
@@ -20,6 +20,24 @@ const VIEW_STORAGE_KEY = "r2md-active-view";
 const PREVIEW_VISIBLE_KEY = "r2md-preview-visible";
 const RAIL_WIDTH = 48;
 const TOOL_VIEWS = ["wechat", "table", "formula"] as const;
+const TOOL_IDLE_UNLOAD_MS = 10 * 60 * 1000;
+const TOOL_REAP_INTERVAL_MS = 60 * 1000;
+
+/**
+ * How long a hidden tool page may stay mounted. Three tool chunks plus their
+ * grid state stay alive for instant switching, but a page left alone for ten
+ * minutes has almost certainly been abandoned.
+ *
+ * The dev-only window.__r2mdToolIdleMs override exists because waiting ten
+ * minutes to test the reaper is not practical.
+ */
+function toolIdleLimit(): number {
+  if (import.meta.env.DEV) {
+    const override = (window as unknown as { __r2mdToolIdleMs?: number }).__r2mdToolIdleMs;
+    if (typeof override === "number" && override > 0) return override;
+  }
+  return TOOL_IDLE_UNLOAD_MS;
+}
 // Rail + resize handle + the narrowest useful editor/preview pair.
 const RESERVED_BESIDE_LIST = 48 + 5 + 640;
 
@@ -64,6 +82,8 @@ function App() {
   // Tool pages hold form state (URL, table grid, LaTeX), so they stay
   // mounted after first use and are hidden with CSS instead of unmounted.
   const [visited, setVisited] = useState<Set<AppView>>(() => new Set([readStoredView()]));
+  // When each tool was last on screen, so idle ones can be released.
+  const lastActiveRef = useRef<Record<string, number>>({});
   const [previewVisible, setPreviewVisible] = useState(readPreviewVisible);
   const { width: listWidth, onMouseDown: onListResize } = useDragWidth({
     storageKey: "r2md-list-width",
@@ -128,7 +148,37 @@ function App() {
     if (typeof window !== "undefined") {
       window.localStorage.setItem(VIEW_STORAGE_KEY, view);
     }
+    lastActiveRef.current[view] = Date.now();
     setVisited((previous) => (previous.has(view) ? previous : new Set(previous).add(view)));
+  }, [view]);
+
+  useEffect(() => {
+    const limit = toolIdleLimit();
+    // Never wait longer than the limit itself, so a shortened limit (dev
+    // override) is observable without waiting a full minute.
+    const interval = Math.min(TOOL_REAP_INTERVAL_MS, limit);
+
+    const timer = window.setInterval(() => {
+      const now = Date.now();
+
+      setVisited((previous) => {
+        let changed = false;
+        const next = new Set(previous);
+
+        for (const tool of TOOL_VIEWS) {
+          if (tool === view || !next.has(tool)) continue;
+          const last = lastActiveRef.current[tool] ?? now;
+          if (now - last >= limit) {
+            next.delete(tool);
+            changed = true;
+          }
+        }
+
+        return changed ? next : previous;
+      });
+    }, interval);
+
+    return () => window.clearInterval(timer);
   }, [view]);
 
   useEffect(() => {
@@ -205,6 +255,11 @@ function App() {
   );
 
   const activeTheme = getActiveTheme(themeId, customThemeTokens, customThemeName);
+
+  // Count from the debounced document: scanning 27 KB on every keystroke
+  // added a full string pass to the typing path for a number nobody reads
+  // mid-word.
+  const wordCount = useMemo(() => countWords(previewMarkdown), [previewMarkdown]);
   const activeDoc = documents.find((doc) => doc.id === activeDocId);
 
   const toggleSidebar = () => {
@@ -285,7 +340,7 @@ function App() {
 
       <StatusBar
         docTitle={activeDoc?.title ?? ""}
-        wordCount={countWords(markdown)}
+        wordCount={wordCount}
         statusMessage={statusMessage}
         statusTone={copyStatus}
         themeName={activeTheme.name}
