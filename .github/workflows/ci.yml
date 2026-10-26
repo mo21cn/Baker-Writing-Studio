@@ -35,3 +35,33 @@ jobs:
 
       - name: Unit tests
         run: npm test
+
+  # The Rust side cannot be compiled on the development machine this
+  # branch came from, so the desktop shell is verified here: a full
+  # `cargo check` of src-tauri. `tauri::generate_context!` embeds the
+  # frontend, so `dist/` has to exist first.
+  tauri-check:
+    runs-on: windows-latest
+    needs: checks
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Cargo check
+        run: cargo check --manifest-path src-tauri/Cargo.toml --all-targets
