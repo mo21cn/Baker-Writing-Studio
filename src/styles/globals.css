@@ -63,6 +63,7 @@ select {
 }
 
 .app-shell {
+  position: relative;
   height: 100%;
   min-height: 0;
   display: flex;
@@ -3527,4 +3528,56 @@ body.is-resizing {
 
 .statusbar-status.status-error {
   color: var(--baker-danger);
+}
+
+/* ---- resizable list, preview toggle, theme drawer ----------------- */
+
+.list-resizer {
+  width: 5px;
+  flex: 0 0 5px;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 3;
+}
+
+.list-resizer:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.editor-only {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* A pane inside the full-width wrapper must ignore the 50% split basis. */
+.editor-only > .pane {
+  flex: 1 1 auto;
+}
+
+.drawer-scrim {
+  position: absolute;
+  inset: 48px 0 24px 0;
+  background: rgba(0, 0, 0, 0.16);
+  z-index: 40;
+}
+
+.theme-drawer {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  bottom: 24px;
+  width: 360px;
+  max-width: 82%;
+  z-index: 41;
+  display: flex;
+  background: var(--baker-surface);
+  border-left: 1px solid var(--baker-border);
+  box-shadow: -16px 0 40px rgba(0, 0, 0, 0.12);
+}
+
+.theme-drawer .theme-panel {
+  width: 100%;
+  min-width: 0;
+  border-left: 0;
 }

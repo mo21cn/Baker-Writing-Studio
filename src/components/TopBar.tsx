@@ -20,6 +20,8 @@ const VIEW_LABELS: Record<AppView, string> = {
 interface TopBarProps {
   markdownValue: string;
   view: AppView;
+  previewVisible: boolean;
+  onTogglePreview: () => void;
 }
 
 /**
@@ -27,7 +29,7 @@ interface TopBarProps {
  * global actions. Transient state (saved / translating / copied) lives
  * in the status bar instead.
  */
-export function TopBar({ markdownValue, view }: TopBarProps) {
+export function TopBar({ markdownValue, view, previewVisible, onTogglePreview }: TopBarProps) {
   const { t } = useTranslation();
   const documents = useEditorStore((state) => state.documents);
   const activeDocId = useEditorStore((state) => state.activeDocId);
@@ -207,6 +209,17 @@ export function TopBar({ markdownValue, view }: TopBarProps) {
       <span className="topbar-spacer" />
 
       <div className="topbar-actions">
+        {view === "editor" && (
+          <button
+            type="button"
+            className="topbar-btn"
+            aria-pressed={previewVisible}
+            onClick={onTogglePreview}
+            title="显示或隐藏预览"
+          >
+            预览
+          </button>
+        )}
         <button
           type="button"
           className="topbar-btn"

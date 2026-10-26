@@ -15,7 +15,6 @@ import {
 } from "../core/translate/translateMarkdown";
 import { useEditorStore } from "../store/editorStore";
 import { PaneHeader } from "./PaneHeader";
-import { ThemePanel } from "./ThemePanel";
 import { ThemeSelector } from "./ThemeSelector";
 
 interface PreviewPaneProps {
@@ -294,7 +293,6 @@ export function PreviewPane({ rawHtml, theme, themeId, onThemeChange }: PreviewP
             dangerouslySetInnerHTML={{ __html: themed.html }}
           />
         </div>
-        <ThemePanel themeId={themeId} onThemeChange={onThemeChange} />
       </div>
     </section>
   );

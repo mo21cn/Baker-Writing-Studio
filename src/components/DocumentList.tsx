@@ -7,6 +7,8 @@ import { ImportDialog } from "./ImportDialog";
 interface DocumentListProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
+  /** Expanded width in px; the rail stays fixed. */
+  width?: number;
 }
 
 function formatTimestamp(value: string): string {
@@ -32,7 +34,7 @@ function sourceLabel(source: DocumentSource, t: (key: string) => string): string
   return t("document.sourceBlank");
 }
 
-export function DocumentList({ collapsed, onToggleCollapse }: DocumentListProps) {
+export function DocumentList({ collapsed, onToggleCollapse, width }: DocumentListProps) {
   const { t } = useTranslation();
   const documents = useEditorStore((state) => state.documents);
   const activeDocId = useEditorStore((state) => state.activeDocId);
@@ -136,7 +138,7 @@ export function DocumentList({ collapsed, onToggleCollapse }: DocumentListProps)
   }
 
   return (
-    <aside className="document-list-pane" aria-label="Document list">
+    <aside className="document-list-pane" aria-label="Document list" style={width ? { width } : undefined}>
       <div className="document-list-header">
         <h2>{t("document.myDocuments")}</h2>
         <div className="document-list-header-actions">
