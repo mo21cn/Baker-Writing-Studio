@@ -248,14 +248,14 @@ export function FormulaToolPage({ initialLatex = "\\frac{a}{b}" }: FormulaToolPa
 
       const doc = new Document({
         creator: "Baker Writing Studio",
-        title: "Formula",
+        title: "公式",
         sections: [
           {
             properties: {},
             children: [
               new Paragraph({
                 heading: HeadingLevel.HEADING_1,
-                children: [new TextRun({ text: "Formula" })],
+                children: [new TextRun({ text: "公式" })],
               }),
               ...children,
             ],

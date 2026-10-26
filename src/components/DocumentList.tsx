@@ -112,7 +112,7 @@ export function DocumentList({ collapsed, onToggleCollapse, width }: DocumentLis
 
   if (collapsed) {
     return (
-      <aside className="document-list-pane document-list-pane-collapsed" aria-label="Document list">
+      <aside className="document-list-pane document-list-pane-collapsed" aria-label="文档列表">
         <button
           type="button"
           className="sidebar-collapse-toggle"
@@ -138,7 +138,7 @@ export function DocumentList({ collapsed, onToggleCollapse, width }: DocumentLis
   }
 
   return (
-    <aside className="document-list-pane" aria-label="Document list" style={width ? { width } : undefined}>
+    <aside className="document-list-pane" aria-label="文档列表" style={width ? { width } : undefined}>
       <div className="document-list-header">
         <h2>{t("document.myDocuments")}</h2>
         <div className="document-list-header-actions">

@@ -12,13 +12,13 @@ import { themes, type ThemeId } from "../core/theme/themes";
 import { useEditorStore } from "../store/editorStore";
 
 const fontFamilyOptions = [
-  { value: 'ui-serif, Georgia, "Times New Roman", serif', label: "Serif" },
-  { value: '"Avenir Next", "Segoe UI", sans-serif', label: "Sans" },
+  { value: 'ui-serif, Georgia, "Times New Roman", serif', label: "衬线" },
+  { value: '"Avenir Next", "Segoe UI", sans-serif', label: "无衬线" },
   {
     value: '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
-    label: "Chinese Sans",
+    label: "中文无衬线",
   },
-  { value: '"SFMono-Regular", Consolas, monospace', label: "Monospace" },
+  { value: '"SFMono-Regular", Consolas, monospace', label: "等宽" },
 ];
 
 const headingStyleOptions: { value: HeadingStyle; label: string }[] = [
@@ -340,7 +340,7 @@ export function ThemePanel({ themeId, onThemeChange }: ThemePanelProps) {
   };
 
   return (
-    <aside className="theme-panel" aria-label="Theme panel">
+    <aside className="theme-panel" aria-label="主题配置">
       <div className="theme-panel-sticky">
         <div className="theme-panel-top">
           <div className="theme-panel-title-row">

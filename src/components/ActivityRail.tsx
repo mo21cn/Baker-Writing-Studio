@@ -43,9 +43,9 @@ const ICONS: Record<AppView, ReactNode> = {
 
 const ITEMS: RailItem[] = [
   { id: "editor", label: "编辑器", icon: ICONS.editor },
-  { id: "wechat", label: "WeChat → MD", icon: ICONS.wechat },
-  { id: "table", label: "Table Converter", icon: ICONS.table },
-  { id: "formula", label: "Formula → LaTeX", icon: ICONS.formula },
+  { id: "wechat", label: "公众号 → MD", icon: ICONS.wechat },
+  { id: "table", label: "表格转换", icon: ICONS.table },
+  { id: "formula", label: "公式 → LaTeX", icon: ICONS.formula },
 ];
 
 /**

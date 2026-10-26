@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { fetchImportUrl } from "../core/import/fetchImportUrl";
 import { convertWechatHtmlToMarkdown, type ConvertOptions } from "../core/wechat/tool";
 import { CanvasPane } from "./CanvasPane";
@@ -37,8 +37,15 @@ function safeFileStem(raw: string, fallback: string): string {
   return cleaned || fallback;
 }
 
+// Remembering the last URL makes the 
+// tool usable across restarts without re-pasting the link.
+const WECHAT_URL_KEY = "r2md-wechat-url";
+
 export function WechatToolPage() {
-  const [url, setUrl] = useState<string>("");
+  const [url, setUrl] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem(WECHAT_URL_KEY) ?? "";
+  });
   const [options, setOptions] = useState<Required<ConvertOptions>>({
     includeTitle: true,
     includeMetadata: true,
@@ -48,6 +55,11 @@ export function WechatToolPage() {
   const [status, setStatus] = useState<Status>({ kind: "idle", message: "" });
   const [warnings, setWarnings] = useState<string[]>([]);
   const [exportStatus, setExportStatus] = useState<ExportStatus>("idle");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(WECHAT_URL_KEY, url);
+  }, [url]);
 
   const handleConvert = async () => {
     const trimmed = url.trim();
@@ -149,7 +161,7 @@ export function WechatToolPage() {
             onClick={handleConvert}
             disabled={status.kind === "loading"}
           >
-            {status.kind === "loading" ? "抓取中..." : "Convert"}
+            {status.kind === "loading" ? "抓取中..." : "转换"}
           </button>
 
           {status.kind !== "idle" && (

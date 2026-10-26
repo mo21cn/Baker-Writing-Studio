@@ -19,6 +19,7 @@ const SIDEBAR_COLLAPSED_KEY = "r2md-sidebar-collapsed";
 const VIEW_STORAGE_KEY = "r2md-active-view";
 const PREVIEW_VISIBLE_KEY = "r2md-preview-visible";
 const RAIL_WIDTH = 48;
+const TOOL_VIEWS = ["wechat", "table", "formula"] as const;
 // Rail + resize handle + the narrowest useful editor/preview pair.
 const RESERVED_BESIDE_LIST = 48 + 5 + 640;
 
@@ -60,6 +61,9 @@ function countWords(markdown: string): number {
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsed);
   const [view, setView] = useState<AppView>(readStoredView);
+  // Tool pages hold form state (URL, table grid, LaTeX), so they stay
+  // mounted after first use and are hidden with CSS instead of unmounted.
+  const [visited, setVisited] = useState<Set<AppView>>(() => new Set([readStoredView()]));
   const [previewVisible, setPreviewVisible] = useState(readPreviewVisible);
   const { width: listWidth, onMouseDown: onListResize } = useDragWidth({
     storageKey: "r2md-list-width",
@@ -124,6 +128,7 @@ function App() {
     if (typeof window !== "undefined") {
       window.localStorage.setItem(VIEW_STORAGE_KEY, view);
     }
+    setVisited((previous) => (previous.has(view) ? previous : new Set(previous).add(view)));
   }, [view]);
 
   useEffect(() => {
@@ -257,19 +262,28 @@ function App() {
         )}
 
         <main className="content">
-          {view === "editor" &&
-            (previewVisible ? (
+          <div className="view-slot" style={{ display: view === "editor" ? "flex" : "none" }}>
+            {previewVisible ? (
               <WorkspaceSplit left={editorPane} right={previewPane} />
             ) : (
               <div className="editor-only">{editorPane}</div>
-            ))}
+            )}
+          </div>
 
-          {view !== "editor" && (
-            <Suspense fallback={<div className="pane-loading">加载中…</div>}>
-              {view === "wechat" && <WechatToolPage />}
-              {view === "table" && <TableToolPage />}
-              {view === "formula" && <FormulaToolPage />}
-            </Suspense>
+          {TOOL_VIEWS.map((tool) =>
+            visited.has(tool) ? (
+              <div
+                key={tool}
+                className="view-slot"
+                style={{ display: view === tool ? "flex" : "none" }}
+              >
+                <Suspense fallback={<div className="pane-loading">加载中…</div>}>
+                  {tool === "wechat" && <WechatToolPage />}
+                  {tool === "table" && <TableToolPage />}
+                  {tool === "formula" && <FormulaToolPage />}
+                </Suspense>
+              </div>
+            ) : null,
           )}
         </main>
       </div>

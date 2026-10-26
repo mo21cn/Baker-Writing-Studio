@@ -12,9 +12,9 @@ import { useEditorStore } from "../store/editorStore";
 
 const VIEW_LABELS: Record<AppView, string> = {
   editor: "编辑器",
-  wechat: "WeChat → Markdown",
-  table: "Table Converter",
-  formula: "Formula → LaTeX",
+  wechat: "公众号 → Markdown",
+  table: "表格转换",
+  formula: "公式 → LaTeX",
 };
 
 interface TopBarProps {

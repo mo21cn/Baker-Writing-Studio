@@ -47,5 +47,5 @@ export function BrandLogo({ className = "brand-logo-image" }: BrandLogoProps) {
     return () => window.removeEventListener(BRAND_LOGO_EVENT, sync);
   }, []);
 
-  return <img className={className} src={src} alt="Baker Writing Studio" draggable={false} />;
+  return <img className={className} src={src} alt="Baker 写作工作台" draggable={false} />;
 }

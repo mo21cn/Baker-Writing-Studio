@@ -6,11 +6,11 @@ import {
 } from "../core/theme/themeTokens";
 
 const fontWeightOptions = [
-  { value: 400, label: "Regular" },
-  { value: 500, label: "Medium" },
-  { value: 600, label: "Semibold" },
-  { value: 700, label: "Bold" },
-  { value: 800, label: "Extra Bold" },
+  { value: 400, label: "常规" },
+  { value: 500, label: "中等" },
+  { value: 600, label: "半粗" },
+  { value: 700, label: "粗体" },
+  { value: 800, label: "特粗" },
 ];
 
 interface HeadingLevelsEditorProps {
