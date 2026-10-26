@@ -1,4 +1,5 @@
 ﻿import { create } from "zustand";
+import { computeInsertRange, takeEditorCaret } from "../core/editor/insertPosition";
 import {
   createBlankDocument,
   createImportedDocument,
@@ -69,6 +70,11 @@ interface EditorState {
   setMarkdown: (markdown: string) => void;
   /** Appends a block to the active document and asks the caret to follow. */
   appendToDocument: (block: string) => void;
+  /**
+   * Inserts a block at the caret the editor last reported (or appends when
+   * the editor was never focused). The caret lands after the block.
+   */
+  insertIntoDocument: (block: string) => void;
   clearPendingCaret: () => void;
   clearPendingView: () => void;
   requestEditorView: () => void;
@@ -514,6 +520,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       documents,
       pendingCaret: markdown.length,
       statusMessage: "已插入到正文末尾",
+    });
+  },
+
+  insertIntoDocument: (block) => {
+    const { markdown: current, pendingCaret } = get();
+    const range = computeInsertRange(current, takeEditorCaret() ?? pendingCaret, block);
+    const documents = updateActiveDocument(get, { markdown: range.markdown });
+    set({
+      markdown: range.markdown,
+      documents,
+      pendingCaret: range.caret,
+      statusMessage: "已插入到正文",
     });
   },
 

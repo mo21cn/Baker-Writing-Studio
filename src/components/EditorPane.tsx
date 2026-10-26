@@ -13,6 +13,7 @@ import { blockPreviewWidgets } from "./editorBlockWidgets";
 import { inlinePreviewWidgets } from "./editorInlineWidgets";
 import { InsertMenu } from "./InsertMenu";
 import { PICK_IMAGE_EVENT, slashCommands } from "./editorSlashCommands";
+import { setEditorCaret } from "../core/editor/insertPosition";
 import { PaneHeader } from "./PaneHeader";
 import { SelectionBubble } from "./SelectionBubble";
 import { bubblePosition, type BubblePosition } from "./editorSelectionTools";
@@ -101,6 +102,9 @@ export function EditorPane({ markdownValue, onMarkdownChange, mathReady = true }
       blockPreviewWidgets,
       // Keeps the floating row glued to the current selection.
       EditorView.updateListener.of((update) => {
+        if (update.selectionSet || update.docChanged) {
+          setEditorCaret(update.view.state.selection.main.head);
+        }
         if (!update.selectionSet && !update.focusChanged) return;
         const next = bubblePosition(update.view);
         setBubble((previous) => {

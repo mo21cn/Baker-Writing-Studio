@@ -14,6 +14,8 @@ import { LATEX_SAMPLE } from "../core/latex/samples";
 import { renderBlocks } from "../core/latex/render";
 import { blocksToDocxParagraphs } from "../core/latex/docx";
 import { FORMULA_DRAFT_KEY, parseFormulaDraft, readDraft, writeDraft } from "../core/tools/drafts";
+import { pushFormulaHistory } from "../core/tools/formulaHistory";
+import { LatexHistoryPanel } from "./LatexHistoryPanel";
 import { CanvasPane } from "./CanvasPane";
 import { LatexSymbolPanel } from "./LatexSymbolPanel";
 import { WorkspaceSplit } from "./WorkspaceSplit";
@@ -112,11 +114,14 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
     () => readDraft(FORMULA_DRAFT_KEY, parseFormulaDraft)?.wrap ?? "inline",
   );
   const [mode, setMode] = useState<PageMode>(readMode);
+  // Remounts the history dropdown after a copy so it re-reads storage.
+  const [historyVersion, setHistoryVersion] = useState(0);
+  const texInputRef = useRef<HTMLInputElement | null>(null);
   const [copyStatus, setCopyStatus] = useState<CopyStatus>("idle");
   const [docxStatus, setDocxStatus] = useState<DocxStatus>("idle");
   const [mathReady, setMathReady] = useState(isMathJaxReady());
 
-  const appendToDocument = useEditorStore((state) => state.appendToDocument);
+  const insertIntoDocument = useEditorStore((state) => state.insertIntoDocument);
   const requestEditorView = useEditorStore((state) => state.requestEditorView);
   const setCopyStatusStore = useEditorStore((state) => state.setCopyStatus);
 
@@ -223,6 +228,10 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
         document.body.removeChild(textarea);
       }
       setCopyStatus("copied");
+      if (mode === "fragment") {
+        pushFormulaHistory(latex, wrap);
+        setHistoryVersion((value) => value + 1);
+      }
     } catch {
       setCopyStatus("failed");
     }
@@ -306,7 +315,7 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
   const handleInsertIntoDocument = () => {
     const snippet = mode === "document" ? latex.trim() : output.wrapped.trim();
     if (!snippet) return;
-    appendToDocument(snippet);
+    insertIntoDocument(snippet);
     requestEditorView();
     setCopyStatusStore("success", "已插入到正文末尾");
   };
@@ -317,6 +326,16 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
     const stem = (heading?.[1] ?? "document").replace(/[\\/:*?"<>|\s]+/g, "-").slice(0, 40) || "document";
     // No BOM: LaTeX readers treat one as text.
     downloadBlob(new Blob([latex], { type: "application/x-tex;charset=utf-8" }), `${stem}.tex`);
+  };
+
+  const handleImportTex = (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file) return;
+    void file.text().then((content) => {
+      setLatex(content);
+      setMode("document");
+      setCopyStatusStore("success", "已导入 " + file.name);
+    });
   };
 
   const handleExportDocx = async () => {
@@ -382,9 +401,30 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
                 </button>
               </div>
               <LatexSymbolPanel onInsert={insertSnippet} />
+              {mode === "fragment" && (
+                <LatexHistoryPanel
+                  key={historyVersion}
+                  onPick={(entry) => {
+                    setLatex(entry.latex);
+                    setWrap(entry.wrap);
+                  }}
+                />
+              )}
             </>
           }
         >
+          <input
+            ref={texInputRef}
+            type="file"
+            accept=".tex,text/plain"
+            hidden
+            aria-hidden="true"
+            tabIndex={-1}
+            onChange={(event) => {
+              handleImportTex(event.target.files);
+              event.target.value = "";
+            }}
+          />
           <div className="latex-source">
             <CodeMirror
               value={latex}
@@ -474,14 +514,23 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
                 插入到正文
               </button>
               {mode === "document" && (
-                <button
-                  type="button"
-                  className="tool-btn"
-                  onClick={handleExportTex}
-                  disabled={!latex.trim()}
-                >
-                  导出 .tex
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="tool-btn"
+                    onClick={handleExportTex}
+                    disabled={!latex.trim()}
+                  >
+                    导出 .tex
+                  </button>
+                  <button
+                    type="button"
+                    className="tool-btn"
+                    onClick={() => texInputRef.current?.click()}
+                  >
+                    导入 .tex
+                  </button>
+                </>
               )}
               <button
                 type="button"
