@@ -4,6 +4,7 @@ import { BrandLogo, BrandWordmark } from "./BrandLogo";
 import { copyHtml } from "../core/copy/copyHtml";
 import { exportLongImage } from "../core/export/exportLongImage";
 import { buildWechatOutput } from "../core/platform/wechatAdapter";
+import { ensureMathJax } from "../core/markdown/mathToSvg";
 import { renderMarkdown } from "../core/markdown/renderMarkdown";
 import { getActiveTheme } from "../core/theme/themes";
 import { useEditorStore } from "../store/editorStore";
@@ -47,6 +48,9 @@ export function Toolbar({ markdownValue }: ToolbarProps) {
       return;
     }
 
+    // MathJax loads asynchronously; a copy/export before it is ready
+    // would emit raw TeX instead of SVG.
+    await ensureMathJax();
     setExportStatus("exporting");
     setCopyStatus("copying", t("toolbar.generatingLongImage"));
 
@@ -89,6 +93,7 @@ export function Toolbar({ markdownValue }: ToolbarProps) {
     setCopyStatus("copying", t("toolbar.generatingWechat"));
 
     try {
+      await ensureMathJax();
       const rendered = renderMarkdown({
         markdown: markdownValue,
       });

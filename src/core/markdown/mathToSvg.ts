@@ -1,29 +1,4 @@
-import { mathjax } from "mathjax-full/js/mathjax.js";
-import { TeX } from "mathjax-full/js/input/tex.js";
-import { SVG } from "mathjax-full/js/output/svg.js";
-import { liteAdaptor } from "mathjax-full/js/adaptors/liteAdaptor.js";
-import { RegisterHTMLHandler } from "mathjax-full/js/handlers/html.js";
-import { AllPackages } from "mathjax-full/js/input/tex/AllPackages.js";
-
-const adaptor = liteAdaptor();
-RegisterHTMLHandler(adaptor);
-
-const texInput = new TeX({
-  packages: AllPackages,
-});
-
-// fontCache "none" inlines every glyph as a <path>, so each formula SVG is
-// fully self-contained. This avoids broken <use> references when a single
-// formula is copied out of the document (a known issue when pasting into
-// editors such as the WeChat backend).
-const svgOutput = new SVG({
-  fontCache: "none",
-});
-
-const mathDocument = mathjax.document("", {
-  InputJax: texInput,
-  OutputJax: svgOutput,
-});
+import type { TexConverter } from "./mathjaxRuntime";
 
 export interface TexToSvgOptions {
   displayMode: boolean;
@@ -38,15 +13,43 @@ export interface TexToSvgOptions {
 const CACHE_LIMIT = 400;
 const cache = new Map<string, string>();
 
+let converter: TexConverter | null = null;
+let loading: Promise<void> | null = null;
+
+/** True once the MathJax chunk has been evaluated. */
+export function isMathJaxReady(): boolean {
+  return converter !== null;
+}
+
+/**
+ * Load and initialise MathJax. Safe to call repeatedly; concurrent
+ * callers share one import. A failed load is retried on the next call.
+ */
+export async function ensureMathJax(): Promise<void> {
+  if (converter) return;
+  if (!loading) {
+    loading = import("./mathjaxRuntime")
+      .then((module) => {
+        converter = module.createConverter();
+      })
+      .catch((error: unknown) => {
+        loading = null;
+        throw error;
+      });
+  }
+  return loading;
+}
+
 export function texToSvg(latex: string, options: TexToSvgOptions): string {
+  if (!converter) {
+    throw new Error("MathJax runtime has not been loaded yet");
+  }
+
   const key = `${options.displayMode ? "display" : "inline"}\u0000${latex}`;
   const cached = cache.get(key);
   if (cached !== undefined) return cached;
 
-  const node = mathDocument.convert(latex, {
-    display: options.displayMode,
-  });
-  const svg = adaptor.innerHTML(node);
+  const svg = converter(latex, options.displayMode);
 
   cache.set(key, svg);
   if (cache.size > CACHE_LIMIT) {

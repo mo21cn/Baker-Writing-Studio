@@ -7,6 +7,7 @@ import { ViewTabs, type AppView } from "./components/ViewTabs";
 import { WorkspaceSplit } from "./components/WorkspaceSplit";
 import { resolveMarkdownAssetUrls } from "./core/assets/resolveAssets";
 import { renderMarkdown } from "./core/markdown/renderMarkdown";
+import { ensureMathJax, isMathJaxReady } from "./core/markdown/mathToSvg";
 import { getActiveTheme } from "./core/theme/themes";
 import { useDebouncedValue } from "./hooks/useDebouncedValue";
 import { useEditorStore } from "./store/editorStore";
@@ -85,9 +86,25 @@ function App() {
     }
   }, [view]);
 
+  // MathJax is ~1.7 MB and only needed once; the preview waits for it
+  // instead of blocking the entry chunk on it.
+  const [mathReady, setMathReady] = useState(isMathJaxReady());
+
+  useEffect(() => {
+    let cancelled = false;
+    void ensureMathJax()
+      .catch(() => undefined)
+      .then(() => {
+        if (!cancelled) setMathReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const rendered = useMemo(
-    () => renderMarkdown({ markdown: previewMarkdown }),
-    [previewMarkdown],
+    () => (mathReady ? renderMarkdown({ markdown: previewMarkdown }) : null),
+    [previewMarkdown, mathReady],
   );
   const activeTheme = getActiveTheme(themeId, customThemeTokens, customThemeName);
 
@@ -113,12 +130,21 @@ function App() {
           <WorkspaceSplit
             left={<EditorPane markdownValue={markdown} onMarkdownChange={setMarkdown} />}
             right={
-              <PreviewPane
-                rawHtml={rendered.rawHtml}
-                theme={activeTheme}
-                themeId={themeId}
-                onThemeChange={setThemeId}
-              />
+              rendered ? (
+                <PreviewPane
+                  rawHtml={rendered.rawHtml}
+                  theme={activeTheme}
+                  themeId={themeId}
+                  onThemeChange={setThemeId}
+                />
+              ) : (
+                <section className="pane preview-pane" aria-label="Preview">
+                  <div className="pane-header">
+                    <span>Preview</span>
+                  </div>
+                  <div className="pane-loading">正在加载公式引擎…</div>
+                </section>
+              )
             }
           />
         )}

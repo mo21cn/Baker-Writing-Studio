@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+import { ensureMathJax } from "./mathToSvg";
 import { sanitizeRenderedHtml } from "./sanitizeHtml";
 import { renderMarkdown } from "./renderMarkdown";
+
+beforeAll(async () => {
+  await ensureMathJax();
+});
 
 const FORMULA =
   '<section class="baker-formula-block"><svg viewBox="0 0 120 40" data-mml-node="math"><g data-mml-node="mi"><path d="M10 10 L20 20" fill="currentColor"/></g></svg></section>';

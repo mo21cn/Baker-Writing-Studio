@@ -1,5 +1,6 @@
 import i18n from "../../i18n";
 import { inlineR2mdAssetImages } from "../assets/inlineAssets";
+import { ensureMathJax } from "../markdown/mathToSvg";
 import { renderMarkdown } from "../markdown/renderMarkdown";
 import { rasterizeMermaidInHtml } from "../markdown/rasterizeMermaid";
 import { applyThemeHtml } from "../theme/applyTheme";
@@ -81,6 +82,7 @@ export async function exportLongImage(input: ExportLongImageInput): Promise<Expo
   }
 
   const warnings: string[] = [];
+  await ensureMathJax();
   const rendered = renderMarkdown({ markdown: input.markdown });
   const themed = applyThemeHtml({ rawHtml: rendered.rawHtml, theme: input.theme });
   const mermaidResult = await rasterizeMermaidInHtml(themed.html);

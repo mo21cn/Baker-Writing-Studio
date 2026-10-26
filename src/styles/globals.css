@@ -1083,6 +1083,16 @@ body.is-resizing {
   color: var(--baker-text);
 }
 
+/* Shown in the preview column while the MathJax chunk loads. */
+.pane-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--baker-text-muted);
+  font-size: 13px;
+}
+
 .preview-ai-button {
   display: inline-flex;
   align-items: center;

@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { texCacheSize, texToSvg } from "./mathToSvg";
+import { beforeAll, describe, expect, it } from "vitest";
+import { ensureMathJax, texCacheSize, texToSvg } from "./mathToSvg";
+
+beforeAll(async () => {
+  await ensureMathJax();
+});
 
 describe("texToSvg", () => {
   it("returns the memoised SVG for a repeated formula", () => {
