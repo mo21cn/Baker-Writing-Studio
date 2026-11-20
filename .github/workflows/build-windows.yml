@@ -1,7 +1,22 @@
 name: Build Windows Installer
 
+# Produces the NSIS installer for Windows x64.
+#
+# The previous version of this workflow checked out the tag `v0.3.0` and
+# uploaded to a release named `v0.3.0`. Neither exists in this private
+# fork, so the workflow could never succeed. It now builds whatever ref
+# triggered it and only publishes when an explicit tag is supplied.
+
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish (e.g. v0.3.0). Leave empty to build only."
+        required: false
+        type: string
+  push:
+    branches: ["feature/**"]
+    tags: ["v*"]
 
 permissions:
   contents: write
@@ -10,34 +25,56 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - name: Checkout v0.3.0 (same as current dmg release)
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: v0.3.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
       - name: Install frontend dependencies
         run: npm ci
 
+      # `tauri::generate_context!` embeds the frontend, so `dist/` has to
+      # exist before the Rust side is compiled.
+      - name: Build frontend
+        run: npm run build
+
       - name: Build Windows NSIS installer (.exe)
-        run: npm run tauri:build -- --bundles nsis
+        run: npm run tauri:build:nsis
 
       - name: List bundle output
         run: Get-ChildItem -Recurse src-tauri\target\release\bundle\nsis\
 
-      - name: Upload installer to GitHub Release v0.3.0
+      # Always keep the installer as an artifact, so a branch build is
+      # still downloadable even when it publishes no release.
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+
+      - name: Publish to GitHub Release
+        if: github.ref_type == 'tag' || inputs.tag != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           $exe = Get-ChildItem -Path "src-tauri\target\release\bundle\nsis\*.exe" | Select-Object -First 1
           if (-not $exe) { throw "NSIS installer not found" }
-          Write-Host "Uploading $($exe.Name) ($([math]::Round($exe.Length/1MB, 2)) MB)"
-          gh release upload v0.3.0 $exe.FullName --clobber
+          Write-Host "Uploading $($exe.Name) ($([math]::Round($exe.Length/1MB, 2)) MB) to release $env:TAG"
+          if (-not (gh release view $env:TAG 2>$null)) {
+            gh release create $env:TAG --title "Baker Writing Studio $env:TAG" --generate-notes
+          }
+          gh release upload $env:TAG $exe.FullName --clobber
