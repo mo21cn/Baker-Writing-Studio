@@ -42,6 +42,8 @@ Markdown 编辑 → 实时预览 → 主题样式 → 平台适配 HTML → 剪�
 | 同上 | **Windows 10/11 (x64)**：`Baker Writing Studio_0.3.0_x64-setup.exe` |
 | Web | `npm run dev` 本地启动，或自行 `npm run build` 后部署 `dist/` |
 
+安装包由 CI 工作流 [Build Windows Installer](.github/workflows/build-windows.yml) 产出，也可以在本地自行构建，见「桌面版」章节。
+
 ### macOS 安装提示
 
 桌面版当前为 **ad-hoc 签名、未公证**。若 Safari 下载后提示「已损坏」或无法打开，请在终端执行后重试：
@@ -57,6 +59,7 @@ xattr -cr "/Applications/Baker Writing Studio.app"
 - 适用于 **Windows 10 / 11，64 位（x64）**
 - 需要系统已安装 **Microsoft Edge WebView2**（Win10/11 通常已自带）
 - 双击 `Baker Writing Studio_0.3.0_x64-setup.exe` 运行 NSIS 安装向导，完成后从开始菜单或桌面快捷方式启动
+- 安装包**未做代码签名**，Windows SmartScreen 可能提示「未知发布者」，选择「更多信息 → 仍要运行」即可
 
 ---
 
@@ -115,6 +118,7 @@ xattr -cr "/Applications/Baker Writing Studio.app"
 - **公众号导入修复**：列表项丢失、display 公式空白、引用块 raw HTML 泄漏等
 - **复制到公众号修复**：桌面版改用原生剪贴板 API，含 Mermaid 的长文复制更稳定
 - **Windows 桌面版**：Releases 提供 x64 安装包（`.exe`）
+- **桌面端原生保存对话框**：导出 Markdown、表格、LaTeX、Word、长图与主题时改走系统保存对话框；Web 版仍为浏览器下载
 
 ### v0.1.0（原 Read2MD Studio 首发）
 
@@ -293,8 +297,9 @@ LaTeX / 图片公式
   → 中间 AST
   → docx + math 输出
       .docx (含 OMML 嵌入公式)
-  → 浏览器 Blob → a[download]
-  → 桌面端 Tauri dialog + fs 写入用户选定路径
+  → core/export/saveFile.ts 统一落盘出口
+      Web：Blob → a[download]
+      桌面端：原生保存对话框 → Rust 写入用户选定路径
 ```
 
 ---
@@ -321,17 +326,26 @@ npm run dev -- --host 127.0.0.1 --port 3000
 
 ### 桌面版（macOS / Windows）
 
-**依赖：** [Rust](https://www.rust-lang.org/tools/install) 1.77+；macOS 另需 Xcode Command Line Tools
+**依赖：**
+
+- [Rust](https://www.rust-lang.org/tools/install) 1.77+
+- macOS：Xcode Command Line Tools
+- Windows：[Visual Studio 2022 Build Tools](https://visualstudio.microsoft.com/downloads/)，需勾选「使用 C++ 的桌面开发」（含 MSVC 编译器与 Windows SDK）；运行时需 **Microsoft Edge WebView2**（Win10/11 通常已自带）
 
 ```bash
 # 开发
 npm run tauri:dev
 
 # 本地打包（产物因平台而异）
-npm run tauri:build
+npm run tauri:build          # 按当前平台自动选择：Windows → nsis，macOS → dmg
+npm run tauri:build:nsis     # 仅 Windows NSIS 安装包
+npm run tauri:build:dmg      # 仅 macOS DMG 镜像
+
 # macOS：src-tauri/target/release/bundle/dmg/Baker Writing Studio_0.3.0_aarch64.dmg
 # Windows：src-tauri/target/release/bundle/nsis/Baker Writing Studio_0.3.0_x64-setup.exe
 ```
+
+> `bundle.targets` 不能同时列出 NSIS 与 DMG：NSIS 只能在 Windows 上打包，DMG 只能在 macOS 上打包，硬写在一起会让 `tauri build` 在两个平台上都失败。因此配置项保持平台默认（`"all"`），实际目标由 `scripts/build-desktop.mjs` 按当前平台显式传给 `--bundles`。
 
 当前版本：**0.3.0**。预构建安装包见 [Releases](https://github.com/mo21cn/Read2MD-Studio/releases)（macOS dmg / Windows exe）。
 
@@ -352,7 +366,9 @@ npm run preview  # 本地预览 dist
 | `npm run build` | TypeScript 检查 + 生产构建 |
 | `npm run preview` | 预览生产构建 |
 | `npm run tauri:dev` | Tauri 开发模式（原生窗口） |
-| `npm run tauri:build` | 构建桌面安装包（macOS：dmg；Windows：exe） |
+| `npm run tauri:build` | 按当前平台构建桌面安装包（Windows：exe；macOS：dmg） |
+| `npm run tauri:build:nsis` | 仅构建 Windows NSIS 安装包（`.exe`） |
+| `npm run tauri:build:dmg` | 仅构建 macOS DMG 镜像（`.dmg`） |
 | `npm test` | 运行单元测试（Vitest） |
 | `npm run lint` | ESLint 检查 |
 | `npm run version:sync` | 把 `package.json` 的版本同步到 Tauri 与 Cargo 清单 |
@@ -397,6 +413,6 @@ npm run preview  # 本地预览 dist
 - **Web 生产部署**暂无 URL 抓取代理与完整图片本地化，含图工作流建议用桌面版
 - 仅实现微信公众号复制适配，知乎 / 掘金等平台待扩展
 - 无云同步与用户账号体系；图片与草稿仅存本机
-- macOS 桌面版为 ad-hoc 签名、未公证；Windows 预构建安装包见 [Releases](https://github.com/mo21cn/Read2MD-Studio/releases)
+- macOS 桌面版为 ad-hoc 签名、未公证；Windows 安装包未签名，SmartScreen 可能提示未知发布者
 - 部分公众号文章导入可能触发环境验证，与网络环境有关
 - **全局翻译依赖公共翻译端点**：无需 API Key，但长文批量翻译受端点限速影响；失败行保留原文并提示
