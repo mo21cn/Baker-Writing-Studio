@@ -15,6 +15,7 @@ import {
 } from "../core/translate/translateMarkdown";
 import { useEditorStore } from "../store/editorStore";
 import { PaneHeader } from "./PaneHeader";
+import { saveText } from "../core/export/saveFile";
 
 interface PreviewPaneProps {
   rawHtml: string;
@@ -33,25 +34,6 @@ interface TranslationSnapshot {
   original: string;
   translated: string;
   target: TranslateTarget;
-}
-
-/**
- * Trigger a browser download of `text` as `filename` using Blob + ObjectURL.
- * Adds a UTF-8 BOM so editors that sniff (Excel, Notepad on some locales)
- * detect the encoding correctly.
- */
-function downloadTextFile(text: string, filename: string, mime: string) {
-  const BOM = "\uFEFF";
-  const blob = new Blob([BOM + text], { type: `${mime};charset=utf-8` });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.rel = "noopener";
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
 }
 
 /** Sanitize the first `# heading` of a Markdown doc into a filename stem. */
@@ -190,15 +172,22 @@ export function PreviewPane({ rawHtml, theme }: PreviewPaneProps) {
     setCopyStatus("success", t("translate.reverted"));
   };
 
-  const handleExportMarkdown = () => {
+  const handleExportMarkdown = async () => {
     if (!markdown) {
       return;
     }
     try {
       const stem = deriveFileStem(markdown);
       const filename = `${stem}-${Date.now()}.md`;
-      downloadTextFile(markdown, filename, "text/markdown");
-      setExportStatus("exported");
+      const result = await saveText(markdown, {
+        filename,
+        mime: "text/markdown",
+        extension: "md",
+      });
+      if (result.cancelled) {
+        return;
+      }
+      setExportStatus(result.ok ? "exported" : "failed");
     } catch {
       setExportStatus("failed");
     }

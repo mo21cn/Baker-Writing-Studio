@@ -152,12 +152,17 @@ export function ThemePanel({ themeId, onThemeChange }: ThemePanelProps) {
     setThemeActionStatus("success", `已保存：${trimmed}`);
   };
 
-  const handleExportTheme = () => {
-    downloadThemeJson(
+  const handleExportTheme = async () => {
+    const result = await downloadThemeJson(
       exportThemeJson({ name: customThemeName, tokens: customThemeTokens }),
     );
-    setThemeActionStatus("success", "主题已导出");
-    setMenuOpen(false);
+    if (result.cancelled) {
+      return;
+    }
+    setThemeActionStatus(result.ok ? "success" : "error", result.ok ? "主题已导出" : "主题导出失败");
+    if (result.ok) {
+      setMenuOpen(false);
+    }
   };
 
   const handleImportTheme = async (event: React.ChangeEvent<HTMLInputElement>) => {

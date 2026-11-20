@@ -3,6 +3,7 @@ import {
   normalizeThemeTokens,
   type ThemeTokenInput,
 } from "./themeTokens";
+import { saveBlob, type SaveFileResult } from "../export/saveFile";
 
 export type ExportedThemeJson = {
   schemaVersion: 1;
@@ -129,14 +130,14 @@ function validateTokens(
   };
 }
 
-export function downloadThemeJson(theme: ExportedThemeJson): void {
+export async function downloadThemeJson(theme: ExportedThemeJson): Promise<SaveFileResult> {
   const blob = new Blob([JSON.stringify(theme, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
   const safeName = theme.name.replace(/[^\w\u4e00-\u9fa5-]+/g, "-").replace(/^-+|-+$/g, "") || "custom-theme";
 
-  anchor.href = url;
-  anchor.download = `${safeName}.json`;
-  anchor.click();
-  URL.revokeObjectURL(url);
+  return saveBlob(blob, {
+    filename: `${safeName}.json`,
+    mime: "application/json",
+    extension: "json",
+    label: "JSON",
+  });
 }

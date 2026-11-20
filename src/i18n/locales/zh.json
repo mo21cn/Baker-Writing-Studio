@@ -74,8 +74,9 @@
     "savedThemeDeleted": "已删除保存的主题"
   },
   "export": {
-    "success": "长图已导出并开始下载。",
+    "success": "长图已导出。",
     "failed": "导出长图失败。",
+    "cancelled": "已取消导出长图。",
     "unsupported": "当前环境不支持导出长图。",
     "copyPermissionFailed": "复制失败，请检查浏览器权限。"
   },

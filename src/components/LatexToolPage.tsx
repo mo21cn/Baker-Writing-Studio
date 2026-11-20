@@ -20,6 +20,7 @@ import { LatexHistoryPanel } from "./LatexHistoryPanel";
 import { CanvasPane } from "./CanvasPane";
 import { LatexSymbolPanel } from "./LatexSymbolPanel";
 import { WorkspaceSplit } from "./WorkspaceSplit";
+import { saveBlob } from "../core/export/saveFile";
 
 interface LatexToolPageProps {
   initialLatex?: string;
@@ -28,6 +29,7 @@ interface LatexToolPageProps {
 type PageMode = "fragment" | "document";
 type CopyStatus = "idle" | "copied" | "failed";
 type DocxStatus = "idle" | "exporting" | "exported" | "failed";
+type TexStatus = "idle" | "exported" | "failed";
 
 const MODE_KEY = "r2md-latex-mode";
 
@@ -95,18 +97,6 @@ function svgToPngBlob(svg: string, scale = 2): Promise<{ blob: Blob; width: numb
   });
 }
 
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.rel = "noopener";
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
-}
-
 export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPageProps) {
   // A latex-source document owns the editor content; without one the page
   // keeps its standalone draft.
@@ -122,6 +112,7 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
   const texInputRef = useRef<HTMLInputElement | null>(null);
   const [copyStatus, setCopyStatus] = useState<CopyStatus>("idle");
   const [docxStatus, setDocxStatus] = useState<DocxStatus>("idle");
+  const [texStatus, setTexStatus] = useState<TexStatus>("idle");
   const [mathReady, setMathReady] = useState(isMathJaxReady());
 
   const documents = useEditorStore((state) => state.documents);
@@ -342,12 +333,21 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
     setCopyStatusStore("success", "已插入到正文末尾");
   };
 
-  const handleExportTex = () => {
+  const handleExportTex = async () => {
     if (!latex.trim()) return;
     const heading = /\\section\*?\{([^}]*)\}/.exec(latex);
     const stem = (heading?.[1] ?? "document").replace(/[\\/:*?"<>|\s]+/g, "-").slice(0, 40) || "document";
     // No BOM: LaTeX readers treat one as text.
-    downloadBlob(new Blob([latex], { type: "application/x-tex;charset=utf-8" }), `${stem}.tex`);
+    const result = await saveBlob(new Blob([latex], { type: "application/x-tex;charset=utf-8" }), {
+      filename: `${stem}.tex`,
+      mime: "application/x-tex",
+      extension: "tex",
+      label: "LaTeX",
+    });
+    if (result.cancelled) {
+      return;
+    }
+    setTexStatus(result.ok ? "exported" : "failed");
   };
 
   const handleImportTex = (files: FileList | null) => {
@@ -391,7 +391,12 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
       });
 
       const blob = await Packer.toBlob(doc);
-      downloadBlob(blob, `latex-${Date.now()}.docx`);
+      await saveBlob(blob, {
+        filename: `latex-${Date.now()}.docx`,
+        mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        extension: "docx",
+        label: "Word",
+      });
       setDocxStatus("exported");
     } catch {
       setDocxStatus("failed");
@@ -558,8 +563,9 @@ export function LatexToolPage({ initialLatex = "\\frac{a}{b}" }: LatexToolPagePr
                     className="tool-btn"
                     onClick={handleExportTex}
                     disabled={!latex.trim()}
+                    data-status={texStatus}
                   >
-                    导出 .tex
+                    {texStatus === "exported" ? "已导出 .tex" : texStatus === "failed" ? "导出失败" : "导出 .tex"}
                   </button>
                   <button
                     type="button"

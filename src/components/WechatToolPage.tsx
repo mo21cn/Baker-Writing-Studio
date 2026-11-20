@@ -3,29 +3,11 @@ import { fetchImportUrl } from "../core/import/fetchImportUrl";
 import { convertWechatHtmlToMarkdown, type ConvertOptions } from "../core/wechat/tool";
 import { CanvasPane } from "./CanvasPane";
 import { WorkspaceSplit } from "./WorkspaceSplit";
+import { saveText } from "../core/export/saveFile";
 
 type Status = { kind: "idle" | "loading" | "error" | "success"; message: string };
 
 type ExportStatus = "idle" | "exported" | "failed";
-
-/**
- * Trigger a browser download of `text` as `filename` using Blob + ObjectURL.
- * Adds a UTF-8 BOM so editors that sniff (Excel, Notepad on some locales)
- * detect the encoding correctly.
- */
-function downloadTextFile(text: string, filename: string, mime: string) {
-  const BOM = "﻿";
-  const blob = new Blob([BOM + text], { type: `${mime};charset=utf-8` });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.rel = "noopener";
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
-}
 
 /** Sanitize a WeChat article title into a safe filename stem. */
 function safeFileStem(raw: string, fallback: string): string {
@@ -97,15 +79,22 @@ export function WechatToolPage() {
     }
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!markdown) {
       return;
     }
     try {
       const stem = safeFileStem(title, "wechat-article");
       const filename = `${stem}-${Date.now()}.md`;
-      downloadTextFile(markdown, filename, "text/markdown");
-      setExportStatus("exported");
+      const result = await saveText(markdown, {
+        filename,
+        mime: "text/markdown",
+        extension: "md",
+      });
+      if (result.cancelled) {
+        return;
+      }
+      setExportStatus(result.ok ? "exported" : "failed");
     } catch {
       setExportStatus("failed");
     }

@@ -6,6 +6,7 @@ import { rasterizeMermaidInHtml } from "../markdown/rasterizeMermaid";
 import { applyThemeHtml } from "../theme/applyTheme";
 import type { ThemeDefinition } from "../theme/themes";
 import { captureElementToBlob } from "./domScreenshot";
+import { saveBlob } from "./saveFile";
 
 const EXPORT_WIDTH = 750;
 
@@ -25,7 +26,7 @@ export interface ExportLongImageResult {
 }
 
 function sanitizeFilename(title: string): string {
-  const trimmed = title.trim() || "read2md-article";
+  const trimmed = title.trim() || "baker-article";
   return `${trimmed.replace(/[\\/:*?"<>|]+/g, "-").slice(0, 80)}.png`;
 }
 
@@ -62,20 +63,11 @@ async function inlineExternalImagesInContainer(container: HTMLElement): Promise<
   return warnings;
 }
 
-function triggerBrowserDownload(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
-
 export async function exportLongImage(input: ExportLongImageInput): Promise<ExportLongImageResult> {
   if (typeof document === "undefined") {
     return {
       ok: false,
-      filename: "read2md-article.png",
+      filename: "baker-article.png",
       message: i18n.t("export.unsupported"),
       warnings: [],
     };
@@ -89,7 +81,7 @@ export async function exportLongImage(input: ExportLongImageInput): Promise<Expo
   warnings.push(...mermaidResult.warnings, ...rendered.warnings);
 
   const localizedHtml = await inlineR2mdAssetImages(mermaidResult.html, input.docId);
-  const filename = sanitizeFilename(input.title ?? "read2md-article");
+  const filename = sanitizeFilename(input.title ?? "baker-article");
 
   const host = document.createElement("div");
   host.style.position = "fixed";
@@ -130,7 +122,32 @@ export async function exportLongImage(input: ExportLongImageInput): Promise<Expo
       preferredScale: 2,
     });
 
-    triggerBrowserDownload(blob, filename);
+    const saved = await saveBlob(blob, {
+      filename,
+      mime: "image/png",
+      extension: "png",
+      label: "PNG",
+    });
+
+    if (saved.cancelled) {
+      return {
+        ok: false,
+        filename,
+        message: i18n.t("export.cancelled"),
+        warnings,
+      };
+    }
+
+    if (!saved.ok) {
+      return {
+        ok: false,
+        filename,
+        message: saved.error
+          ? `${i18n.t("export.failed")} (${saved.error})`
+          : i18n.t("export.failed"),
+        warnings,
+      };
+    }
 
     return {
       ok: true,

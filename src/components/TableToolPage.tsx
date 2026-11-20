@@ -20,6 +20,7 @@ import {
 import { useEditorStore } from "../store/editorStore";
 import { CanvasPane } from "./CanvasPane";
 import { WorkspaceSplit } from "./WorkspaceSplit";
+import { saveText } from "../core/export/saveFile";
 
 type FormatTab = TableFormat;
 
@@ -31,25 +32,6 @@ const FORMATS: { id: FormatTab; label: string; mime: string; extension: string }
 ];
 
 type ExportStatus = "idle" | "exported" | "failed";
-
-/**
- * Trigger a browser download of `text` as `filename` using Blob + ObjectURL.
- * Adds a UTF-8 BOM so editors that sniff (Excel, Notepad on some locales)
- * detect the encoding correctly.
- */
-function downloadTextFile(text: string, filename: string, mime: string) {
-  const BOM = "﻿";
-  const blob = new Blob([BOM + text], { type: `${mime};charset=utf-8` });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.rel = "noopener";
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
-}
 
 interface TableToolPageProps {
   /**
@@ -168,7 +150,7 @@ export function TableToolPage(_props: TableToolPageProps = {}) {
 
   const activeFormatMeta = FORMATS.find((format) => format.id === activeFormat);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!output || !activeFormatMeta) {
       return;
     }
@@ -177,8 +159,15 @@ export function TableToolPage(_props: TableToolPageProps = {}) {
     }
     try {
       const filename = `table-${Date.now()}.${activeFormatMeta.extension}`;
-      downloadTextFile(output, filename, activeFormatMeta.mime);
-      setExportStatus("exported");
+      const result = await saveText(output, {
+        filename,
+        mime: activeFormatMeta.mime,
+        extension: activeFormatMeta.extension,
+      });
+      if (result.cancelled) {
+        return;
+      }
+      setExportStatus(result.ok ? "exported" : "failed");
     } catch {
       setExportStatus("failed");
     }
