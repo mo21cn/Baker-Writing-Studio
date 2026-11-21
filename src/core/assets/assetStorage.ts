@@ -1,6 +1,12 @@
 import { deleteBrowserAssets } from "./browserAssetStorage";
 import { isTauriRuntime } from "../import/tauriRuntime";
 
+// Storage root for localized images.
+//
+// The `read2md-studio` segment is the pre-rebrand folder name and is
+// kept verbatim on purpose: documents saved before the rebrand resolve
+// their images against this path, so renaming the folder would orphan
+// every image in every existing document.
 const ASSETS_ROOT = "read2md-studio/assets";
 
 export function getDocumentAssetsRelativeDir(docId: string): string {

@@ -182,7 +182,7 @@ describe("对照 documents", () => {
     const doc = [
       "# 使用 Markdown 写作",
       "",
-      "本文介绍 Read2MD Studio 的基本用法。",
+      "本文介绍 Baker Writing Studio 的基本用法。",
       "",
       "它支持 CodeMirror 编辑器与 Mermaid 图表。",
     ].join("\n");

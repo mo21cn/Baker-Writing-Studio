@@ -70,5 +70,5 @@ export function describeTarget(target: PublishTarget) {
 }
 \`\`\`
 
-![Read2MD preview image](https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1200&q=80)
+![Baker Writing Studio preview image](https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1200&q=80)
 `;

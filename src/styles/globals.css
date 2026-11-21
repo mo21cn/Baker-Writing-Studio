@@ -1,7 +1,5 @@
 :root {
   --baker-bg: #f7f7f7;
-  --baker-bg-glow-purple: transparent;
-  --baker-bg-glow-warm: transparent;
   --baker-surface: #ffffff;
   --baker-surface-muted: #f0f0f0;
   --baker-border: rgba(0, 0, 0, 0.08);
