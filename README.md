@@ -30,7 +30,7 @@ Markdown 编辑 → 实时预览 → 主题样式 → 平台适配 HTML → 剪�
 
 | 平台 | 安装包 | 状态 |
 |------|--------|------|
-| Windows 10/11 (x64) | [`Baker-Writing-Studio_0.3.1_x64-setup.exe`](https://github.com/mo21cn/Read2MD-Studio/releases/download/v0.3.1/Baker-Writing-Studio_0.3.1_x64-setup.exe) | ✅ 已发布（约 5.7 MB） |
+| Windows 10/11 (x64) | [`Baker-Writing-Studio_0.3.1_x64-setup.exe`](https://github.com/mo21cn/Read2MD-Studio/releases/download/v0.3.1/Baker-Writing-Studio_0.3.1_x64-setup.exe) | ✅ 已发布（约 6 MB） |
 | macOS Apple Silicon (arm64) | `Baker-Writing-Studio_0.3.1_aarch64.dmg` | 需在 macOS 上自行构建，见「本地构建」 |
 | Web | `npm run build` 产出 `dist/`，静态托管即可 | ✅ |
 

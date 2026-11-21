@@ -30,7 +30,7 @@ Available as a **Web app** (browser) and a **desktop app** (Tauri — a **Window
 
 | Platform | Package | Status |
 |----------|---------|--------|
-| Windows 10/11 (x64) | [`Baker-Writing-Studio_0.3.1_x64-setup.exe`](https://github.com/mo21cn/Read2MD-Studio/releases/download/v0.3.1/Baker-Writing-Studio_0.3.1_x64-setup.exe) | ✅ Published (~5.7 MB) |
+| Windows 10/11 (x64) | [`Baker-Writing-Studio_0.3.1_x64-setup.exe`](https://github.com/mo21cn/Read2MD-Studio/releases/download/v0.3.1/Baker-Writing-Studio_0.3.1_x64-setup.exe) | ✅ Published (~6 MB) |
 | macOS Apple Silicon (arm64) | `Baker-Writing-Studio_0.3.1_aarch64.dmg` | Build it yourself on macOS, see [Development](#development) |
 | Web | `npm run build` produces `dist/`; host it as static files | ✅ |
 
