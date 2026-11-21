@@ -27,7 +27,7 @@
       "assetProtocol": {
         "enable": true,
         "scope": [
-          "$APPDATA/baker-writing-studio/**"
+          "$APPDATA/read2md-studio/assets/**"
         ]
       }
     },
