@@ -66,15 +66,35 @@ jobs:
           if-no-files-found: error
 
       - name: Publish to GitHub Release
-        if: github.ref_type == 'tag' || inputs.tag != ''
+        if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.tag != '')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           $exe = Get-ChildItem -Path "src-tauri\target\release\bundle\nsis\*.exe" | Select-Object -First 1
           if (-not $exe) { throw "NSIS installer not found" }
-          Write-Host "Uploading $($exe.Name) ($([math]::Round($exe.Length/1MB, 2)) MB) to release $env:TAG"
+
+          # The NSIS bundle is named after `productName`, which contains
+          # spaces. GitHub rewrites spaces in asset names to dots on upload,
+          # so the raw bundle would be published as `Baker.Writing.Studio_...`.
+          # Normalise to dashes first so the asset keeps one stable name.
+          $name = ($exe.BaseName -replace '\s+', '-') + $exe.Extension
+          $asset = Join-Path $env:RUNNER_TEMP $name
+          Copy-Item $exe.FullName $asset -Force
+
+          Write-Host "Uploading $name ($([math]::Round($exe.Length/1MB, 2)) MB) to release $env:TAG"
           if (-not (gh release view $env:TAG 2>$null)) {
             gh release create $env:TAG --title "Baker Writing Studio $env:TAG" --generate-notes
           }
-          gh release upload $env:TAG $exe.FullName --clobber
+
+          # Drop assets left by earlier runs under the dotted name, so a
+          # release never ships the same installer twice.
+          $existing = (gh release view $env:TAG --json assets | ConvertFrom-Json).assets
+          foreach ($a in $existing) {
+            if ($a.name -ne $name -and $a.name -match '^Baker[ ._-]Writing') {
+              Write-Host "Removing stale asset $($a.name)"
+              gh release delete-asset $env:TAG $a.name --yes
+            }
+          }
+
+          gh release upload $env:TAG $asset --clobber

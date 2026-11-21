@@ -4,6 +4,15 @@
   "license": "Apache-2.0",
   "private": true,
   "type": "module",
+  "author": "Baker Writing Studio contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mo21cn/Read2MD-Studio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mo21cn/Read2MD-Studio/issues"
+  },
+  "homepage": "https://github.com/mo21cn/Read2MD-Studio#readme",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

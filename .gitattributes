@@ -1,0 +1,18 @@
+# Normalize text files to LF in the repository and check them out as CRLF on
+# Windows, so line endings never show up as diff noise.
+* text=auto eol=crlf
+
+# Binary assets are left untouched.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.exe binary
+*.dmg binary
+*.pdf binary
