@@ -1,0 +1,82 @@
+name: Bug 报告 / Bug report
+description: 报告一个可复现的问题
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你发现问题。请尽量填满下面的表单，**尤其是复现步骤**。
+        Thanks for reporting a bug. Please fill in as much as you can, especially the reproduction steps.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 发生了什么 / What happened
+      description: 描述你看到的现象，而不是你认为的原因。
+      placeholder: |
+        例如：点击「导出长图」后，预览区一直空白，没有生成图片。
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤 / Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+      validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 你期望的结果 / Expected behaviour
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 版本 / Version
+      placeholder: "0.3.0（桌面安装包 / 桌面端）"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 运行环境 / Platform
+      options:
+        - Windows 桌面版 / Windows desktop
+        - 浏览器 / Browser
+        - 其他 / Other
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: 系统版本 / OS
+      placeholder: "Windows 11 23H2"
+    validations:
+      required: false
+
+  - type: textarea
+    id: documents
+    attributes:
+      label: 相关文档内容 / Relevant document content
+      description: |
+        如果问题与某篇文档相关，请贴出涉及问题的片段（可脱敏）。
+        可选，但能大幅加快定位速度。
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / Logs
+      description: |
+        桌面版日志位于 `%APPDATA%\baker-writing-studio\` 下。
+        浏览器版请粘贴 DevTools Console 输出。
+      render: shell
