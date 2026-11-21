@@ -12,7 +12,7 @@
 
 **请不要用公开 Issue 报告安全问题。**
 
-请通过 GitHub 的 [Private vulnerability reporting](https://github.com/mo21cn/Read2MD-Studio/security/advisories/new) 提交私密报告（若仓库未开启该功能，请直接在仓库的 Security 页联系维护者）。
+请通过 GitHub 的 [Private vulnerability reporting](https://github.com/mo21cn/Baker-Writing-Studio/security/advisories/new) 提交私密报告（若仓库未开启该功能，请直接在仓库的 Security 页联系维护者）。
 
 报告中请尽量包含：
 

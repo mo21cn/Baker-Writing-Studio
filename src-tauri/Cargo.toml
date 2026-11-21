@@ -4,7 +4,7 @@ version = "0.3.1"
 description = "Baker Writing Studio - Markdown publishing workbench"
 authors = ["Baker Writing Studio"]
 license = "Apache-2.0"
-repository = "https://github.com/mo21cn/Read2MD-Studio"
+repository = "https://github.com/mo21cn/Baker-Writing-Studio"
 edition = "2021"
 rust-version = "1.77.2"
 

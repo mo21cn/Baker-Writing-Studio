@@ -6,7 +6,7 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Forked from](https://img.shields.io/badge/fork-ingeniousfrog%2FRead2MD--Studio-lightgrey)](https://github.com/ingeniousfrog/Read2MD-Studio)
-[![Release](https://img.shields.io/github/v/release/mo21cn/Read2MD-Studio?label=Release)](https://github.com/mo21cn/Read2MD-Studio/releases)
+[![Release](https://img.shields.io/github/v/release/mo21cn/Baker-Writing-Studio?label=Release)](https://github.com/mo21cn/Baker-Writing-Studio/releases)
 
 > **关于本项目**
 > Baker Writing Studio 是对 [ingeniousfrog/Read2MD-Studio](https://github.com/ingeniousfrog/Read2MD-Studio)（Apache License 2.0）的 fork。原项目由 ingeniousfrog 创建并以 Apache License 2.0 发布；本 fork 在保留原始 `LICENSE` 与版权声明的前提下进行了品牌重构、功能扩展与本地化定制。**分发本软件时请完整保留上游 `LICENSE` 文件与原作者致谢。**
@@ -30,7 +30,7 @@ Markdown 编辑 → 实时预览 → 主题样式 → 平台适配 HTML → 剪�
 
 | 平台 | 安装包 | 状态 |
 |------|--------|------|
-| Windows 10/11 (x64) | [`Baker-Writing-Studio_0.3.1_x64-setup.exe`](https://github.com/mo21cn/Read2MD-Studio/releases/download/v0.3.1/Baker-Writing-Studio_0.3.1_x64-setup.exe) | ✅ 已发布（约 6 MB） |
+| Windows 10/11 (x64) | [`Baker-Writing-Studio_0.3.1_x64-setup.exe`](https://github.com/mo21cn/Baker-Writing-Studio/releases/download/v0.3.1/Baker-Writing-Studio_0.3.1_x64-setup.exe) | ✅ 已发布（约 6 MB） |
 | macOS Apple Silicon (arm64) | `Baker-Writing-Studio_0.3.1_aarch64.dmg` | 需在 macOS 上自行构建，见「本地构建」 |
 | Web | `npm run build` 产出 `dist/`，静态托管即可 | ✅ |
 

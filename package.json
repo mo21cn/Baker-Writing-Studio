@@ -7,12 +7,12 @@
   "author": "Baker Writing Studio contributors",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mo21cn/Read2MD-Studio.git"
+    "url": "git+https://github.com/mo21cn/Baker-Writing-Studio.git"
   },
   "bugs": {
-    "url": "https://github.com/mo21cn/Read2MD-Studio/issues"
+    "url": "https://github.com/mo21cn/Baker-Writing-Studio/issues"
   },
-  "homepage": "https://github.com/mo21cn/Read2MD-Studio#readme",
+  "homepage": "https://github.com/mo21cn/Baker-Writing-Studio#readme",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

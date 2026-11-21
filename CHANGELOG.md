@@ -61,5 +61,5 @@
 
 > 0.1.0 与 0.2.0 为上游 [ingeniousfrog/Read2MD-Studio](https://github.com/ingeniousfrog/Read2MD-Studio) 的版本历史；Baker Writing Studio 从 0.3.0 起独立演进。
 
-[0.3.1]: https://github.com/mo21cn/Read2MD-Studio/releases/tag/v0.3.1
-[0.3.0]: https://github.com/mo21cn/Read2MD-Studio/releases/tag/v0.3.0
+[0.3.1]: https://github.com/mo21cn/Baker-Writing-Studio/releases/tag/v0.3.1
+[0.3.0]: https://github.com/mo21cn/Baker-Writing-Studio/releases/tag/v0.3.0

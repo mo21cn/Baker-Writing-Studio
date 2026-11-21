@@ -1,7 +1,7 @@
 blank_issues_enabled: true
 contact_links:
   - name: 安全漏洞报告 / Report a security vulnerability
-    url: https://github.com/mo21cn/Read2MD-Studio/security/advisories/new
+    url: https://github.com/mo21cn/Baker-Writing-Studio/security/advisories/new
     about: |
       请不要用公开 issue 报告安全漏洞，详见 SECURITY.md。
       Please do not open a public issue for security vulnerabilities. See SECURITY.md.

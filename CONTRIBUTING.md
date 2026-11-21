@@ -12,7 +12,7 @@
 | macOS | Xcode Command Line Tools |
 
 ```bash
-git clone https://github.com/mo21cn/Read2MD-Studio.git
+git clone https://github.com/mo21cn/Baker-Writing-Studio.git
 cd Read2MD-Studio
 npm install
 ```

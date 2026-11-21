@@ -6,7 +6,7 @@ A Markdown workbench built around a personal writing flow: on top of an editor, 
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Forked from](https://img.shields.io/badge/fork-ingeniousfrog%2FRead2MD--Studio-lightgrey)](https://github.com/ingeniousfrog/Read2MD-Studio)
-[![Release](https://img.shields.io/github/v/release/mo21cn/Read2MD-Studio?label=Release)](https://github.com/mo21cn/Read2MD-Studio/releases)
+[![Release](https://img.shields.io/github/v/release/mo21cn/Baker-Writing-Studio?label=Release)](https://github.com/mo21cn/Baker-Writing-Studio/releases)
 
 > **About this project**
 > Baker Writing Studio is a fork of [ingeniousfrog/Read2MD-Studio](https://github.com/ingeniousfrog/Read2MD-Studio) (Apache License 2.0). The original project was created by ingeniousfrog and released under the Apache License 2.0; this fork rebrands, extends and localizes it while keeping the original `LICENSE` file and copyright notice intact. **When redistributing this software, keep the upstream `LICENSE` file and the original attribution.**
@@ -30,7 +30,7 @@ Available as a **Web app** (browser) and a **desktop app** (Tauri — a **Window
 
 | Platform | Package | Status |
 |----------|---------|--------|
-| Windows 10/11 (x64) | [`Baker-Writing-Studio_0.3.1_x64-setup.exe`](https://github.com/mo21cn/Read2MD-Studio/releases/download/v0.3.1/Baker-Writing-Studio_0.3.1_x64-setup.exe) | ✅ Published (~6 MB) |
+| Windows 10/11 (x64) | [`Baker-Writing-Studio_0.3.1_x64-setup.exe`](https://github.com/mo21cn/Baker-Writing-Studio/releases/download/v0.3.1/Baker-Writing-Studio_0.3.1_x64-setup.exe) | ✅ Published (~6 MB) |
 | macOS Apple Silicon (arm64) | `Baker-Writing-Studio_0.3.1_aarch64.dmg` | Build it yourself on macOS, see [Development](#development) |
 | Web | `npm run build` produces `dist/`; host it as static files | ✅ |
 
