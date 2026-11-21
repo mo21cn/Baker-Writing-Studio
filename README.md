@@ -30,8 +30,8 @@ Markdown 编辑 → 实时预览 → 主题样式 → 平台适配 HTML → 剪�
 
 | 平台 | 安装包 | 状态 |
 |------|--------|------|
-| Windows 10/11 (x64) | [`Baker-Writing-Studio_0.3.0_x64-setup.exe`](https://github.com/mo21cn/Read2MD-Studio/releases/download/v0.3.0/Baker-Writing-Studio_0.3.0_x64-setup.exe) | ✅ 已发布（5.73 MB） |
-| macOS Apple Silicon (arm64) | `Baker-Writing-Studio_0.3.0_aarch64.dmg` | 需在 macOS 上自行构建，见「本地构建」 |
+| Windows 10/11 (x64) | [`Baker-Writing-Studio_0.3.1_x64-setup.exe`](https://github.com/mo21cn/Read2MD-Studio/releases/download/v0.3.1/Baker-Writing-Studio_0.3.1_x64-setup.exe) | ✅ 已发布（约 5.7 MB） |
+| macOS Apple Silicon (arm64) | `Baker-Writing-Studio_0.3.1_aarch64.dmg` | 需在 macOS 上自行构建，见「本地构建」 |
 | Web | `npm run build` 产出 `dist/`，静态托管即可 | ✅ |
 
 安装包由 CI 工作流 [Build Windows Installer](.github/workflows/build-windows.yml) 产出，也可以在本地自行构建。
@@ -212,8 +212,8 @@ npm run tauri:build          # 按当前平台自动选择：Windows → nsis，
 npm run tauri:build:nsis     # 仅 Windows NSIS 安装包
 npm run tauri:build:dmg      # 仅 macOS DMG 镜像
 
-# macOS：src-tauri/target/release/bundle/dmg/Baker Writing Studio_0.3.0_aarch64.dmg
-# Windows：src-tauri/target/release/bundle/nsis/Baker Writing Studio_0.3.0_x64-setup.exe
+# macOS：src-tauri/target/release/bundle/dmg/Baker Writing Studio_0.3.1_aarch64.dmg
+# Windows：src-tauri/target/release/bundle/nsis/Baker Writing Studio_0.3.1_x64-setup.exe
 ```
 
 > `bundle.targets` 不能同时列出 NSIS 与 DMG：NSIS 只能在 Windows 上打包，DMG 只能在 macOS 上打包，硬写在一起会让 `tauri build` 在两个平台上都失败。因此配置项保持平台默认（`"all"`），实际目标由 `scripts/build-desktop.mjs` 按当前平台显式传给 `--bundles`。

@@ -30,8 +30,8 @@ Available as a **Web app** (browser) and a **desktop app** (Tauri — a **Window
 
 | Platform | Package | Status |
 |----------|---------|--------|
-| Windows 10/11 (x64) | [`Baker-Writing-Studio_0.3.0_x64-setup.exe`](https://github.com/mo21cn/Read2MD-Studio/releases/download/v0.3.0/Baker-Writing-Studio_0.3.0_x64-setup.exe) | ✅ Published (5.73 MB) |
-| macOS Apple Silicon (arm64) | `Baker-Writing-Studio_0.3.0_aarch64.dmg` | Build it yourself on macOS, see [Development](#development) |
+| Windows 10/11 (x64) | [`Baker-Writing-Studio_0.3.1_x64-setup.exe`](https://github.com/mo21cn/Read2MD-Studio/releases/download/v0.3.1/Baker-Writing-Studio_0.3.1_x64-setup.exe) | ✅ Published (~5.7 MB) |
+| macOS Apple Silicon (arm64) | `Baker-Writing-Studio_0.3.1_aarch64.dmg` | Build it yourself on macOS, see [Development](#development) |
 | Web | `npm run build` produces `dist/`; host it as static files | ✅ |
 
 The installer is produced by the [Build Windows Installer](.github/workflows/build-windows.yml) workflow. You can also build it locally.
@@ -212,8 +212,8 @@ npm run tauri:build          # picks the target for the current platform: Window
 npm run tauri:build:nsis     # Windows NSIS installer only
 npm run tauri:build:dmg      # macOS DMG image only
 
-# macOS: src-tauri/target/release/bundle/dmg/Baker Writing Studio_0.3.0_aarch64.dmg
-# Windows: src-tauri/target/release/bundle/nsis/Baker Writing Studio_0.3.0_x64-setup.exe
+# macOS: src-tauri/target/release/bundle/dmg/Baker Writing Studio_0.3.1_aarch64.dmg
+# Windows: src-tauri/target/release/bundle/nsis/Baker Writing Studio_0.3.1_x64-setup.exe
 ```
 
 > `bundle.targets` cannot list NSIS and DMG at the same time: NSIS only builds on Windows and DMG only on macOS, so listing both makes `tauri build` fail on either platform. The config keeps the platform default (`"all"`) and `scripts/build-desktop.mjs` passes the target for the current platform explicitly via `--bundles`.

@@ -1,6 +1,6 @@
 [package]
 name = "baker-writing-studio"
-version = "0.3.0"
+version = "0.3.1"
 description = "Baker Writing Studio - Markdown publishing workbench"
 authors = ["Baker Writing Studio"]
 license = "Apache-2.0"

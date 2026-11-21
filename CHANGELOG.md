@@ -4,10 +4,14 @@
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-11-21
+
+公开可用前的缺陷修复版。
+
 ### 修复
 
-- **桌面版本地图片无法显示**：`asset://` 协议的作用域写成了 `$APPDATA/baker-writing-studio/**`，而图片实际写在 `$APPDATA/read2md-studio/assets/{docId}/`，作用域不覆盖，桌面端预览里的本地图片会全部 403。作用域已改为 `$APPDATA/read2md-studio/assets/**`，并新增 `src/core/assets/assetScope.test.ts` 把作用域与落盘目录绑在一起，防止再次漂移。
-  > 已发布的 v0.3.0 安装包包含此缺陷，需要用修复后的版本重新构建。
+- **桌面版本地图片无法保存、无法显示**：Tauri 有两道路径作用域闸门都指向了错误目录 —— `fs` 插件的读写作用域（`src-tauri/capabilities/default.json`）与 `asset://` 协议的服务作用域（`src-tauri/tauri.conf.json`）原先都写成 `$APPDATA/baker-writing-studio/**`，而图片实际写在 `$APPDATA/read2md-studio/assets/{docId}/`。前者导致粘贴 / 导入的图片**根本存不进磁盘**，后者导致预览取图**全部 403**。两处均已收窄到 `$APPDATA/read2md-studio/assets/**`（只放行图片目录本身）。
+  > v0.3.0 的安装包包含此缺陷，**桌面端贴图与图片本地化不可用，请改用 v0.3.1**。新增 `src/core/assets/assetScope.test.ts` 把两处作用域与实际落盘目录绑在一起，防止再次漂移。
 
 ### 文档
 
@@ -57,4 +61,5 @@
 
 > 0.1.0 与 0.2.0 为上游 [ingeniousfrog/Read2MD-Studio](https://github.com/ingeniousfrog/Read2MD-Studio) 的版本历史；Baker Writing Studio 从 0.3.0 起独立演进。
 
+[0.3.1]: https://github.com/mo21cn/Read2MD-Studio/releases/tag/v0.3.1
 [0.3.0]: https://github.com/mo21cn/Read2MD-Studio/releases/tag/v0.3.0
