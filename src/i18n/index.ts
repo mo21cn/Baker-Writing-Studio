@@ -13,9 +13,9 @@ import zh from "./locales/zh.json";
  * translation is a separate, explicit action (see the `翻译` button
  * in the Preview pane header).
  *
- * `en.json` is intentionally still imported by the build so the
- * English strings stay in the repo as a reference / fallback for
- * translators, but it is never activated at runtime.
+ * The English locale bundle was removed along with the toggle: it was
+ * never activated at runtime, and keeping it in the tree only invited
+ * the UI to drift into a half-translated state.
  */
 
 void i18n.use(initReactI18next).init({
