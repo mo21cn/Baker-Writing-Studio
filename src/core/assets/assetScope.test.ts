@@ -4,15 +4,20 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 /**
- * The desktop build serves localized images through Tauri's `asset://`
- * protocol, and that protocol answers 403 for every path outside the
- * configured scope.
+ * The desktop build stores localized images on disk and then serves them
+ * back to the preview through Tauri's `asset://` protocol. Both steps are
+ * gated by a path scope, and both scopes live outside the code that uses
+ * them:
  *
- * The scope lives in `src-tauri/tauri.conf.json` and the directory the
- * images are actually written to lives in `src/core/assets/assetStorage.ts`.
- * Nothing but this test keeps the two in step: the web build never touches
- * either of them, so a mismatch shows up only as a broken image in the
- * desktop preview, with no error surfaced in the UI.
+ * - `src-tauri/capabilities/default.json` decides where the `fs` plugin may
+ *   write, read and remove files. A path outside the scope is refused.
+ * - `src-tauri/tauri.conf.json` decides which paths the `asset://` protocol
+ *   may serve. A path outside the scope answers 403.
+ *
+ * The directory the images actually live in is defined in
+ * `src/core/assets/assetStorage.ts`. Nothing but this test keeps the three
+ * in step: the web build touches none of them, so a mismatch shows up only
+ * as images that silently fail to save or render in the desktop app.
  */
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -31,7 +36,8 @@ function readAssetsRoot(): string {
   return match[1].replace(/\\/g, "/").replace(/\/+$/, "");
 }
 
-function readAssetScope(): string[] {
+/** Paths the `asset://` protocol may serve. */
+function readAssetProtocolScope(): string[] {
   const config = JSON.parse(readRepoFile("src-tauri", "tauri.conf.json")) as {
     app: { security: { assetProtocol: { enable: boolean; scope: string[] } } };
   };
@@ -40,8 +46,31 @@ function readAssetScope(): string[] {
   return assetProtocol.scope.map((entry) => entry.replace(/\\/g, "/"));
 }
 
+/** Paths the `fs` plugin may read, write and remove. */
+function readFsCapabilityScope(): string[] {
+  const capability = JSON.parse(
+    readRepoFile("src-tauri", "capabilities", "default.json"),
+  ) as {
+    permissions: ({ identifier: string; allow?: { path?: string }[] } | string)[];
+  };
+
+  const paths: string[] = [];
+  for (const permission of capability.permissions) {
+    if (typeof permission === "string") {
+      continue;
+    }
+    for (const entry of permission.allow ?? []) {
+      if (entry.path) {
+        paths.push(entry.path.replace(/\\/g, "/"));
+      }
+    }
+  }
+  expect(paths.length).toBeGreaterThan(0);
+  return paths;
+}
+
 /**
- * Does the scope grant the asset protocol access to `relativePath`?
+ * Does the scope grant access to `relativePath`?
  *
  * `$APPDATA` resolves to the app data dir, so a scope entry is a path
  * relative to that dir.
@@ -60,18 +89,23 @@ function scopeCovers(scope: string[], relativePath: string): boolean {
   });
 }
 
-describe("Tauri asset protocol scope", () => {
+describe("desktop asset storage scope", () => {
   it("covers the directory localized images are written to", () => {
-    expect(scopeCovers(readAssetScope(), readAssetsRoot())).toBe(true);
+    const assetsRoot = readAssetsRoot();
+
+    expect(scopeCovers(readAssetProtocolScope(), assetsRoot)).toBe(true);
+    expect(scopeCovers(readFsCapabilityScope(), assetsRoot)).toBe(true);
   });
 
   it("does not expose anything outside the assets directory", () => {
-    const scope = readAssetScope();
     const assetsRoot = readAssetsRoot();
+    const scopes = [readAssetProtocolScope(), readFsCapabilityScope()];
 
-    // The whole app data dir.
-    expect(scopeCovers(scope, "")).toBe(false);
-    // A sibling of the assets directory.
-    expect(scopeCovers(scope, `${assetsRoot}-other`)).toBe(false);
+    for (const scope of scopes) {
+      // The whole app data dir.
+      expect(scopeCovers(scope, "")).toBe(false);
+      // A sibling of the assets directory.
+      expect(scopeCovers(scope, `${assetsRoot}-other`)).toBe(false);
+    }
   });
 });

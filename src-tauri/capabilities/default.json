@@ -12,55 +12,55 @@
     {
       "identifier": "fs:scope",
       "allow": [
-        { "path": "$APPDATA/baker-writing-studio" },
-        { "path": "$APPDATA/baker-writing-studio/**" }
+        { "path": "$APPDATA/read2md-studio/assets" },
+        { "path": "$APPDATA/read2md-studio/assets/**" }
       ]
     },
     {
       "identifier": "fs:allow-app-read-recursive",
       "allow": [
-        { "path": "$APPDATA/baker-writing-studio" },
-        { "path": "$APPDATA/baker-writing-studio/**" }
+        { "path": "$APPDATA/read2md-studio/assets" },
+        { "path": "$APPDATA/read2md-studio/assets/**" }
       ]
     },
     {
       "identifier": "fs:allow-app-write-recursive",
       "allow": [
-        { "path": "$APPDATA/baker-writing-studio" },
-        { "path": "$APPDATA/baker-writing-studio/**" }
+        { "path": "$APPDATA/read2md-studio/assets" },
+        { "path": "$APPDATA/read2md-studio/assets/**" }
       ]
     },
     {
       "identifier": "fs:allow-app-meta-recursive",
       "allow": [
-        { "path": "$APPDATA/baker-writing-studio" },
-        { "path": "$APPDATA/baker-writing-studio/**" }
+        { "path": "$APPDATA/read2md-studio/assets" },
+        { "path": "$APPDATA/read2md-studio/assets/**" }
       ]
     },
     {
       "identifier": "fs:allow-mkdir",
       "allow": [
-        { "path": "$APPDATA/baker-writing-studio" },
-        { "path": "$APPDATA/baker-writing-studio/**" }
+        { "path": "$APPDATA/read2md-studio/assets" },
+        { "path": "$APPDATA/read2md-studio/assets/**" }
       ]
     },
     {
       "identifier": "fs:allow-read-file",
-      "allow": [{ "path": "$APPDATA/baker-writing-studio/**" }]
+      "allow": [{ "path": "$APPDATA/read2md-studio/assets/**" }]
     },
     {
       "identifier": "fs:allow-write-file",
-      "allow": [{ "path": "$APPDATA/baker-writing-studio/**" }]
+      "allow": [{ "path": "$APPDATA/read2md-studio/assets/**" }]
     },
     {
       "identifier": "fs:allow-remove",
-      "allow": [{ "path": "$APPDATA/baker-writing-studio/**" }]
+      "allow": [{ "path": "$APPDATA/read2md-studio/assets/**" }]
     },
     {
       "identifier": "fs:allow-exists",
       "allow": [
-        { "path": "$APPDATA/baker-writing-studio" },
-        { "path": "$APPDATA/baker-writing-studio/**" }
+        { "path": "$APPDATA/read2md-studio/assets" },
+        { "path": "$APPDATA/read2md-studio/assets/**" }
       ]
     },
     "clipboard-manager:allow-write-html",
